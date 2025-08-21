@@ -1,9 +1,10 @@
 <p align="center">
     <a href="https://github.com/coolsam726/flatpickr/actions?query=workflow%3Arun-tests+branch%3Amain"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/coolsam726/flatpickr/run-tests.yml?branch=main&label=tests&style=for-the-badge&logo=github"></a>
     <a href='https://github.com/coolsam726/flatpickr/actions/workflows/fix-php-code-style-issues.yml?query=workflow%3A%22Fix+PHP+Code+Styling%22+branch%3Amain'><img alt="Styling" src="https://img.shields.io/github/actions/workflow/status/coolsam726/flatpickr/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=for-the-badge&logo=github"></a>
-    <a href="https://laravel.com"><img alt="Laravel v9.x" src="https://img.shields.io/badge/Laravel-v12.x-FF2D20?style=for-the-badge&logo=laravel"></a>
-    <a href="https://filamentphp.com"><img alt="Filament v3.x" src="https://img.shields.io/badge/FilamentPHP-v3.x-FB70A9?style=for-the-badge&logo=filament"></a>
-    <a href="https://php.net"><img alt="PHP 8.1" src="https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php"></a>
+    <a href="https://laravel.com"><img alt="Laravel v12.x" src="https://img.shields.io/badge/Laravel-v12.x-FF2D20?style=for-the-badge&logo=laravel"></a>
+    <a href="https://filamentphp.com"><img alt="Filament v4.x" src="https://img.shields.io/badge/FilamentPHP-v4.x-FB70A9?style=for-the-badge&logo=filament"></a>
+    <a href="https://tailwindcss.com"><img alt="Tailwind v4.x" src="https://img.shields.io/badge/Tailwindcss-v4.x-FB70A9?style=for-the-badge&logo=tailwindcss"></a>
+    <a href="https://php.net"><img alt="PHP 8.4" src="https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php"></a>
     <a href="https://packagist.org/packages/coolsam/flatpickr"><img alt="Packagist" src="https://img.shields.io/packagist/dt/coolsam/flatpickr.svg?style=for-the-badge&logo=count"></a>
 </p>
 
@@ -13,10 +14,10 @@ Use **[Flatpickr](https://flatpickr.js.org/)** as your datepicker in the Filamen
 
 ## Supported Versions
 | Package Version | Supported Filament Version(s) |
-|------------------|------------------------------|
-| v2.x             | Filament v2                  |
-| v3.x             | Filament v3                  |
-| v4.x             | Filament v3, Filament v4     |
+|-----------------|-------------------------------|
+| v2.x            | Filament v2                   |
+| v4.x            | Filament v3                   |
+| v5.x            | Filament v4                   |
 
 ## Installation
 
