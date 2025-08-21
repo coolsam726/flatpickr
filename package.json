@@ -2,18 +2,18 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev:styles": "npx tailwindcss -i resources/css/index.css -o resources/dist/flatpickr.css --postcss --watch && npx tailwindcss -i resources/css/filament-theme.css -o resources/dist/themes/default.css --postcss --watch",
+        "dev:styles": "npx @tailwindcss/cli -i resources/css/index.css -o resources/dist/flatpickr.css --watch && npx @tailwindcss/cli -i resources/css/filament-theme.css -o resources/dist/themes/default.css --watch",
         "dev:scripts": "node bin/build.js --dev",
-        "build:styles": "npx tailwindcss -i resources/css/index.css -o resources/dist/flatpickr.css --postcss --minify && npx tailwindcss -i resources/css/filament-theme.css -o resources/dist/themes/default.css --postcss --minify && npm run purge",
+        "build:styles": "npx @tailwindcss/cli -i resources/css/index.css -o resources/dist/flatpickr.css --minify && npx @tailwindcss/cli -i resources/css/filament-theme.css -o resources/dist/themes/default.css --minify",
         "build:scripts": "node bin/build.js",
-        "purge": "filament-purge -i resources/dist/themes/default.css -o resources/dist/themes/default.css -v 3.x",
+        "purge": "filament-purge -i resources/dist/themes/default.css -o resources/dist/themes/default.css -v 4.x",
         "dev": "npm-run-all --parallel dev:*",
         "build": "npm-run-all build:*"
     },
     "devDependencies": {
         "@awcodes/filament-plugin-purge": "^1.1.1",
-        "@tailwindcss/forms": "^0.5.4",
-        "@tailwindcss/typography": "^0.5.9",
+        "tailwindcss": "^4",
+        "@tailwindcss/cli": "^4",
         "autoprefixer": "^10.4.14",
         "dayjs": "^1.11.13",
         "esbuild": "^0.19.2",
@@ -21,8 +21,6 @@
         "npm-run-all": "^4.1.5",
         "postcss": "^8.4.26",
         "postcss-import": "^15.1.0",
-        "prettier": "^2.7.1",
-        "prettier-plugin-tailwindcss": "^0.1.13",
-        "tailwindcss": "^3.3.3"
+        "prettier": "^2.7.1"
     }
 }
