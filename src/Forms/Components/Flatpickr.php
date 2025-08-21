@@ -952,7 +952,7 @@ class Flatpickr extends DateTimePicker
             $attrs->put('inline', $this->isInline());
         }
 
-//        $this->dispatchEvent('attributes-updated', id: $this->getId());
+        //        $this->dispatchEvent('attributes-updated', id: $this->getId());
 
         return $attrs->toArray();
     }
