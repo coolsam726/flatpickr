@@ -11,10 +11,10 @@ use Coolsam\Flatpickr\Enums\FlatpickrPosition;
 use Coolsam\Flatpickr\Enums\FlatpickrTheme;
 use Coolsam\Flatpickr\FilamentFlatpickr;
 use Filament\Forms\Components\Field;
-use Illuminate\View\ComponentAttributeBag;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\View\ComponentAttributeBag;
 
 class Flatpickr extends Field
 {
@@ -43,7 +43,6 @@ class Flatpickr extends Field
     protected CarbonInterface | string | Closure | null $maxDate = null;
 
     protected string | Closure | null $locale = null;
-
 
     // Additional Field properties needed by the view
     protected array | Closure | null $datalistOptions = null;
@@ -75,7 +74,6 @@ class Flatpickr extends Field
     protected bool | Closure $isPrefixInline = false;
 
     protected bool | Closure $isSuffixInline = false;
-
 
     // Flatpickr specific properties
     protected bool | Closure $altInput = true;
@@ -144,11 +142,11 @@ class Flatpickr extends Field
 
     protected FlatpickrMonthSelectorType | Closure $monthSelectorType = FlatpickrMonthSelectorType::DROPDOWN_SELECTOR;
 
-
     // DateTimePicker methods we need
     public function displayFormat(string | Closure | null $format): static
     {
         $this->displayFormat = $format;
+
         return $this;
     }
 
@@ -160,19 +158,21 @@ class Flatpickr extends Field
     public function format(string | Closure | null $format): static
     {
         $this->format = $format;
+
         return $this;
     }
 
     public function getFormat(): string
     {
         return $this->evaluate($this->format) ?? (
-        $this->hasTime() ? 'Y-m-d H:i:s' : 'Y-m-d'
+            $this->hasTime() ? 'Y-m-d H:i:s' : 'Y-m-d'
         );
     }
 
     public function timezone(string | Closure | null $timezone): static
     {
         $this->timezone = $timezone;
+
         return $this;
     }
 
@@ -184,6 +184,7 @@ class Flatpickr extends Field
     public function time(bool | Closure $condition = true): static
     {
         $this->hasTime = $condition;
+
         return $this;
     }
 
@@ -195,6 +196,7 @@ class Flatpickr extends Field
     public function date(bool | Closure $condition = true): static
     {
         $this->hasDate = $condition;
+
         return $this;
     }
 
@@ -206,6 +208,7 @@ class Flatpickr extends Field
     public function seconds(bool | Closure $condition = true): static
     {
         $this->hasSeconds = $condition;
+
         return $this;
     }
 
@@ -217,6 +220,7 @@ class Flatpickr extends Field
     public function locale(string | Closure | null $locale): static
     {
         $this->locale = $locale;
+
         return $this;
     }
 
@@ -229,6 +233,7 @@ class Flatpickr extends Field
     public function datalist(array | Closure | null $options): static
     {
         $this->datalistOptions = $options;
+
         return $this;
     }
 
@@ -263,6 +268,7 @@ class Flatpickr extends Field
     public function placeholder(string | Closure | null $placeholder): static
     {
         $this->placeholder = $placeholder;
+
         return $this;
     }
 
@@ -274,6 +280,7 @@ class Flatpickr extends Field
     public function readOnly(bool | Closure $condition = true): static
     {
         $this->isReadOnly = $condition;
+
         return $this;
     }
 
@@ -285,6 +292,7 @@ class Flatpickr extends Field
     public function autofocus(bool | Closure $condition = true): static
     {
         $this->isAutofocused = $condition;
+
         return $this;
     }
 
@@ -296,6 +304,7 @@ class Flatpickr extends Field
     public function extraAlpineAttributes(array | Closure $attributes): static
     {
         $this->extraAlpineAttributes = $attributes;
+
         return $this;
     }
 
@@ -313,6 +322,7 @@ class Flatpickr extends Field
     public function prefixActions(array | Closure $actions): static
     {
         $this->prefixActions = $actions;
+
         return $this;
     }
 
@@ -324,6 +334,7 @@ class Flatpickr extends Field
     public function prefixIcon(string | Closure | null $icon): static
     {
         $this->prefixIcon = $icon;
+
         return $this;
     }
 
@@ -335,6 +346,7 @@ class Flatpickr extends Field
     public function prefixIconColor(string | Closure | null $color): static
     {
         $this->prefixIconColor = $color;
+
         return $this;
     }
 
@@ -346,6 +358,7 @@ class Flatpickr extends Field
     public function prefixLabel(string | Closure | null $label): static
     {
         $this->prefixLabel = $label;
+
         return $this;
     }
 
@@ -363,6 +376,7 @@ class Flatpickr extends Field
     public function suffixActions(array | Closure $actions): static
     {
         $this->suffixActions = $actions;
+
         return $this;
     }
 
@@ -374,6 +388,7 @@ class Flatpickr extends Field
     public function suffixIcon(string | Closure | null $icon): static
     {
         $this->suffixIcon = $icon;
+
         return $this;
     }
 
@@ -385,6 +400,7 @@ class Flatpickr extends Field
     public function suffixIconColor(string | Closure | null $color): static
     {
         $this->suffixIconColor = $color;
+
         return $this;
     }
 
@@ -396,6 +412,7 @@ class Flatpickr extends Field
     public function suffixLabel(string | Closure | null $label): static
     {
         $this->suffixLabel = $label;
+
         return $this;
     }
 
@@ -463,11 +480,13 @@ class Flatpickr extends Field
         if ($state instanceof CarbonInterface) {
             if (! $component->isNative()) {
                 $component->state($state->format($component->getFormat()));
+
                 return;
             }
 
             if (! $component->hasTime()) {
                 $component->state($state->toDateString());
+
                 return;
             }
 
@@ -475,6 +494,7 @@ class Flatpickr extends Field
 
             if (! $component->hasDate()) {
                 $component->state($state->toTimeString($precision));
+
                 return;
             }
 
@@ -495,9 +515,11 @@ class Flatpickr extends Field
                 return $date->toDateTimeString($precision);
             })->implode($conjunction);
             $component->state($state);
+
             return;
         } else {
             $component->state(null);
+
             return;
         }
     }
@@ -583,36 +605,42 @@ class Flatpickr extends Field
     public function altFormat(Closure | string | null $altFormat): Flatpickr
     {
         $this->displayFormat($altFormat);
+
         return $this;
     }
 
     public function altInput(Closure | bool $altInput = true): Flatpickr
     {
         $this->altInput = $altInput;
+
         return $this;
     }
 
     public function altInputClass(Closure | string $altInputClass): Flatpickr
     {
         $this->altInputClass = $altInputClass;
+
         return $this;
     }
 
     public function allowInput(Closure | bool $allowInput = true): Flatpickr
     {
         $this->allowInput = $allowInput;
+
         return $this;
     }
 
     public function allowInvalidPreload(Closure | bool $allowInvalidPreload = true): Flatpickr
     {
         $this->allowInvalidPreload = $allowInvalidPreload;
+
         return $this;
     }
 
     public function appendTo(Closure | string | null $appendTo = null): Flatpickr
     {
         $this->appendTo = $appendTo;
+
         return $this;
     }
 
@@ -626,12 +654,14 @@ class Flatpickr extends Field
     public function conjunction(Closure | string $conjunction = ','): Flatpickr
     {
         $this->conjunction = $conjunction;
+
         return $this;
     }
 
     public function clickOpens(Closure | bool $clickOpens = true): Flatpickr
     {
         $this->clickOpens = $clickOpens;
+
         return $this;
     }
 
@@ -661,13 +691,13 @@ class Flatpickr extends Field
         return $this;
     }
 
-
     public function getMinDate(): ?string
     {
         $date = $this->evaluate($this->minDate);
         if ($date instanceof CarbonInterface) {
             return $date->format('Y-m-d');
         }
+
         return $date;
     }
 
@@ -677,6 +707,7 @@ class Flatpickr extends Field
         if ($date instanceof CarbonInterface) {
             return $date->format('Y-m-d');
         }
+
         return $date;
     }
 
@@ -739,103 +770,119 @@ class Flatpickr extends Field
     public function enableSeconds(Closure | bool $enableSeconds = true): Flatpickr
     {
         $this->seconds($enableSeconds);
-        
+
         return $this;
     }
 
     public function hourIncrement(Closure | int $hourIncrement): Flatpickr
     {
         $this->hourIncrement = $hourIncrement;
+
         return $this;
     }
 
     public function minuteIncrement(Closure | int $minuteIncrement): Flatpickr
     {
         $this->minuteIncrement = $minuteIncrement;
+
         return $this;
     }
 
     public function mode(Closure | FlatpickrMode $mode): Flatpickr
     {
         $this->mode = $mode;
+
         return $this;
     }
 
     public function noCalendar(Closure | bool $noCalendar = true): Flatpickr
     {
         $this->noCalendar = $noCalendar;
+
         return $this;
     }
 
     public function position(Closure | FlatpickrPosition $position): Flatpickr
     {
         $this->position = $position;
+
         return $this;
     }
 
     public function prevArrow(Closure | string | null $prevArrow): Flatpickr
     {
         $this->prevArrow = $prevArrow;
+
         return $this;
     }
 
     public function nextArrow(Closure | string | null $nextArrow): Flatpickr
     {
         $this->nextArrow = $nextArrow;
+
         return $this;
     }
 
     public function shorthandCurrentMonth(Closure | bool $shorthandCurrentMonth = true): Flatpickr
     {
         $this->shorthandCurrentMonth = $shorthandCurrentMonth;
+
         return $this;
     }
 
     public function showMonths(Closure | int $showMonths = 2): Flatpickr
     {
         $this->showMonths = $showMonths;
+
         return $this;
     }
 
     public function time24hr(Closure | bool $time24hr = true): Flatpickr
     {
         $this->time24hr = $time24hr;
+
         return $this;
     }
 
     public function weekNumbers(Closure | bool $weekNumbers = true): Flatpickr
     {
         $this->weekNumbers = $weekNumbers;
+
         return $this;
     }
 
     public function monthSelectorType(Closure | FlatpickrMonthSelectorType $monthSelectorType): Flatpickr
     {
         $this->monthSelectorType = $monthSelectorType;
+
         return $this;
     }
 
     public function weekPicker(Closure | bool $weekPicker = true): Flatpickr
     {
         $this->weekPicker = $weekPicker;
+
         return $this;
     }
 
     public function monthPicker(Closure | bool $monthPicker = true): Flatpickr
     {
         $this->monthPicker = $monthPicker;
+
         return $this;
     }
 
     public function rangePicker(Closure | bool $rangePicker = true): Flatpickr
     {
         $this->rangePicker = $rangePicker;
+
         return $this;
     }
 
     public function multiplePicker(Closure | bool $multiplePicker = true): Flatpickr
     {
         $this->multiplePicker = $multiplePicker;
+
         return $this;
     }
 
@@ -844,12 +891,14 @@ class Flatpickr extends Field
         $this->timePicker = $timePicker;
         $this->time($timePicker);
         $this->noCalendar($timePicker);
+
         return $this;
     }
 
     public function inline(Closure | bool $inline = true): Flatpickr
     {
         $this->inline = $inline;
+
         return $this;
     }
 
@@ -857,6 +906,7 @@ class Flatpickr extends Field
     public function getThemeAsset(): string
     {
         $theme = Config::get('flatpickr.theme', FlatpickrTheme::DEFAULT);
+
         return $theme->getAsset();
     }
 
