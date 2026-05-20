@@ -532,7 +532,7 @@ class Flatpickr extends Field
 
         $component->rule(
             'date',
-            static fn(FlatPickr $component): bool => $component->isMultiplePicker() && !$component->isRangePicker() && $component->hasDate(),
+            static fn(Flatpickr $component): bool => $component->isMultiplePicker() && !$component->isRangePicker() && $component->hasDate(),
         );
 
         // try to convert the state to a Carbon instance
