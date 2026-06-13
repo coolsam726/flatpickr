@@ -20,17 +20,23 @@ jobs:
           - laravel: 13.*
             testbench: ^11.0
             carbon: ^3.8.6
-            pest-plugin-laravel: ^3.1
+            pest: ^4.4
+            pest-plugin-laravel: ^4.1
+            pest-plugin-livewire: ^4.0
             larastan: ^3.1
           - laravel: 12.*
             testbench: ^10.0
             carbon: ^3.8.6
+            pest: ^3.8
             pest-plugin-laravel: ^3.1
+            pest-plugin-livewire: ^3.0
             larastan: ^3.1
           - laravel: 11.*
             testbench: ^9.0
             carbon: ^3.8.4
+            pest: ^3.8
             pest-plugin-laravel: ^3.1
+            pest-plugin-livewire: ^3.0
             larastan: ^3.1
         exclude:
           - laravel: 13.*
@@ -62,7 +68,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "pestphp/pest-plugin-laravel:${{ matrix.pest-plugin-laravel }}" "nunomaduro/larastan:${{ matrix.larastan }}" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "pestphp/pest:${{ matrix.pest }}" "pestphp/pest-plugin-laravel:${{ matrix.pest-plugin-laravel }}" "pestphp/pest-plugin-livewire:${{ matrix.pest-plugin-livewire }}" "nunomaduro/larastan:${{ matrix.larastan }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List Installed Dependencies
@@ -92,16 +98,25 @@ jobs:
             filament: ^5.0
             testbench: ^11.0
             carbon: ^3.8.6
+            pest: ^4.4
+            pest-plugin-laravel: ^4.1
+            pest-plugin-livewire: ^4.0
           - php: 8.4
             laravel: 13.*
             filament: ^5.0
             testbench: ^11.0
             carbon: ^3.8.6
+            pest: ^4.4
+            pest-plugin-laravel: ^4.1
+            pest-plugin-livewire: ^4.0
           - php: 8.2
             laravel: 12.*
             filament: ^4.0
             testbench: ^10.0
             carbon: ^3.8.6
+            pest: ^3.8
+            pest-plugin-laravel: ^3.1
+            pest-plugin-livewire: ^3.0
 
     name: Smoke P${{ matrix.php }} - L${{ matrix.laravel }} - F${{ matrix.filament }}
 
@@ -119,7 +134,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" "filament/forms:${{ matrix.filament }}" "filament/support:${{ matrix.filament }}" --no-interaction --no-update
-          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "filament/filament:${{ matrix.filament }}" "pestphp/pest-plugin-laravel:^3.1" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "filament/filament:${{ matrix.filament }}" "pestphp/pest:${{ matrix.pest }}" "pestphp/pest-plugin-laravel:${{ matrix.pest-plugin-laravel }}" "pestphp/pest-plugin-livewire:${{ matrix.pest-plugin-livewire }}" --no-interaction --no-update
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests

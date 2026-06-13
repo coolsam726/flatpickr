@@ -35,6 +35,7 @@ Before submitting a pull request:
 
 - Check the codebase to ensure that your feature doesn't already exist.
 - Check the pull requests to ensure that another person hasn't already submitted the feature or fix.
+- Link resolved issues in the PR body using [GitHub keywords](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) (`Closes #123`, `Fixes #123`, or `Resolves #123`) so they auto-close on merge.
 
 ## Requirements
 
