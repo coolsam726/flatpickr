@@ -79,7 +79,10 @@ class FlatpickrServiceProvider extends PackageServiceProvider
         }
     }
 
-    public function packageRegistered(): void {}
+    public function packageRegistered(): void
+    {
+        // No package-level bindings are registered for this plugin.
+    }
 
     public function packageBooted(): void
     {
