@@ -60,6 +60,14 @@ function normalizeState(state) {
   return state
 }
 
+function parseConstraintValue(value) {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  return value
+}
+
 export default function flatpickrComponent(state, attrs) {
   const timezone = dayjs.tz.guess()
 
@@ -69,13 +77,55 @@ export default function flatpickrComponent(state, attrs) {
     timezone,
 
     fp: null,
+    visibilityObserver: null,
 
     init: function () {
-      this.initFlatpickr()
+      this.initWhenVisible()
 
       this.$watch('state', (value) => {
         this.syncPickerFromState(value)
       })
+
+      this.registerModalListeners()
+    },
+
+    registerModalListeners: function () {
+      const initIfNeeded = () => {
+        if (!this.fp && this.isElementVisible()) {
+          this.initFlatpickr()
+        }
+      }
+
+      ;['modal-opened', 'ax-modal-opened', 'opened-form-component-action-modal'].forEach((eventName) => {
+        window.addEventListener(eventName, initIfNeeded)
+      })
+    },
+
+    isElementVisible: function () {
+      return this.$el && this.$el.offsetParent !== null
+    },
+
+    initWhenVisible: function () {
+      if (this.isElementVisible()) {
+        this.initFlatpickr()
+
+        return
+      }
+
+      if (typeof IntersectionObserver === 'undefined') {
+        return
+      }
+
+      this.visibilityObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !this.fp) {
+            this.initFlatpickr()
+            this.visibilityObserver?.disconnect()
+          }
+        })
+      })
+
+      this.visibilityObserver.observe(this.$el)
     },
 
     initFlatpickr: function () {
@@ -100,6 +150,19 @@ export default function flatpickrComponent(state, attrs) {
         plugins.push(new WeekSelect({}))
       }
 
+      const minDate = parseConstraintValue(this.$refs.minDate?.value ?? this.attrs.minDate)
+      const maxDate = parseConstraintValue(this.$refs.maxDate?.value ?? this.attrs.maxDate)
+
+      let disabledDates = this.attrs.disable ?? []
+
+      if (this.$refs.disabledDates?.value) {
+        try {
+          disabledDates = JSON.parse(this.$refs.disabledDates.value) ?? disabledDates
+        } catch (error) {
+          disabledDates = this.attrs.disable ?? []
+        }
+      }
+
       const config = {
         disableMobile: true,
         initialDate: normalizeState(this.state),
@@ -107,31 +170,22 @@ export default function flatpickrComponent(state, attrs) {
         static: false,
         altInput: true,
         ...this.attrs,
+        minDate,
+        maxDate,
+        disable: disabledDates,
         locale: customLocale,
         plugins,
         onChange: (selectedDates, dateStr) => {
+          if (this.attrs.yearPicker && selectedDates.length > 0) {
+            this.state = String(selectedDates[0].getFullYear())
+
+            return
+          }
+
           this.state = selectedDates.length === 0 ? null : dateStr
         },
         onClose: () => {
-          if (!this.fp || !this.attrs.allowInput) {
-            return
-          }
-
-          const inputValue = this.fp.altInput?.value ?? this.fp.input.value
-
-          if (inputValue === '') {
-            this.fp.clear()
-            this.state = null
-
-            return
-          }
-
-          const parsed = this.fp.parseDate(inputValue, this.fp.config.dateFormat)
-
-          if (parsed) {
-            this.fp.setDate(parsed, false)
-            this.state = this.fp.input.value
-          }
+          this.commitManualInput()
         },
       }
 
@@ -140,9 +194,60 @@ export default function flatpickrComponent(state, attrs) {
 
       this.fp = flatpickr(this.$refs.input, config)
 
+      this.bindManualInputEvents()
+
       if (this.state) {
         this.syncPickerFromState(this.state)
       }
+    },
+
+    bindManualInputEvents: function () {
+      if (!this.fp) {
+        return
+      }
+
+      const inputs = [this.fp.altInput, this.fp.input].filter(Boolean)
+
+      inputs.forEach((input) => {
+        input.addEventListener('blur', () => {
+          this.commitManualInput()
+        })
+      })
+    },
+
+    commitManualInput: function () {
+      if (!this.fp) {
+        return
+      }
+
+      const inputValue = this.fp.altInput?.value ?? this.fp.input.value
+
+      if (inputValue === '') {
+        this.fp.clear()
+        this.state = null
+
+        return
+      }
+
+      if (!this.attrs.allowInput && !this.attrs.timePicker) {
+        return
+      }
+
+      const parsed = this.fp.parseDate(inputValue, this.fp.config.dateFormat)
+
+      if (!parsed) {
+        return
+      }
+
+      this.fp.setDate(parsed, false)
+
+      if (this.attrs.yearPicker) {
+        this.state = String(parsed.getFullYear())
+
+        return
+      }
+
+      this.state = this.fp.input.value
     },
 
     syncPickerFromState: function (value) {

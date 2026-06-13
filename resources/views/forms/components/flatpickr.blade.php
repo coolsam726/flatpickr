@@ -6,10 +6,13 @@
     $hasTime = $hasTime();
     $id = $getId();
     $isDisabled = $isDisabled();
+    $isReadOnly = $isReadOnly();
+    $hasDate = $hasDate();
     $isPrefixInline = $isPrefixInline();
     $isSuffixInline = $isSuffixInline();
     $maxDate = $getMaxDate();
     $minDate = $getMinDate();
+    $disabledDates = $getDisableDates();
     $prefixActions = $getPrefixActions();
     $prefixIcon = $getPrefixIcon();
     $prefixLabel = $getPrefixLabel();
@@ -18,6 +21,7 @@
     $suffixLabel = $getSuffixLabel();
     $statePath = $getStatePath();
     $attrs = $getFlatpickrAttributes();
+    $livewireKey = method_exists($field, 'getLivewireKey') ? $field->getLivewireKey() : $id;
 
 @endphp
 
@@ -69,11 +73,23 @@
         @else
             <div
                     wire:ignore
+                    wire:key="{{ $livewireKey }}.{{
+                        substr(md5(serialize([
+                            $disabledDates,
+                            $isDisabled,
+                            $isReadOnly,
+                            $maxDate,
+                            $minDate,
+                            $hasTime,
+                            $hasDate,
+                            $attrs,
+                        ])), 0, 64)
+                    }}"
                     @if (FilamentView::hasSpaMode())
-                        {{-- format-ignore-start --}}x-load="visible || event (ax-modal-opened)"
+                        {{-- format-ignore-start --}}x-load="visible || event (ax-modal-opened) || event (modal-opened)"
                     {{-- format-ignore-end --}}
                     @else
-                        x-load
+                        x-load="visible || event (modal-opened) || event (opened-form-component-action-modal)"
                     @endif
                     x-load-css="[
                     @js(\Filament\Support\Facades\FilamentAsset::getStyleHref('flatpickr-styles', \Coolsam\Flatpickr\FilamentFlatpickr::getPackageName()))
@@ -87,6 +103,16 @@
                             ->class(['fi-fo-date-time-picker'])
                     }}
             >
+                <input x-ref="minDate" type="hidden" value="{{ $minDate }}" />
+
+                <input x-ref="maxDate" type="hidden" value="{{ $maxDate }}" />
+
+                <input
+                        x-ref="disabledDates"
+                        type="hidden"
+                        value="{{ json_encode($disabledDates) }}"
+                />
+
                 <x-filament::input
                         :attributes="
                     \Filament\Support\prepare_inherited_attributes($getExtraInputAttributeBag())

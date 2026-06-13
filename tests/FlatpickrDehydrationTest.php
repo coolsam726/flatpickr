@@ -138,6 +138,24 @@ it('dehydrates cleared multiple picker strings without throwing', function () {
         ->toBeNull();
 });
 
+it('defaults year picker format to a four-digit year', function () {
+    $component = Flatpickr::make('year')->yearPicker();
+
+    expect($component->getFormat())->toBe('Y')
+        ->and($component->isYearPicker())->toBeTrue()
+        ->and($component->getFlatpickrAttributes()['yearPicker'])->toBeTrue()
+        ->and($component->getFlatpickrAttributes()['dateFormat'])->toBe('Y');
+});
+
+it('dehydrates year picker values as a year string', function () {
+    $component = Flatpickr::make('year')->yearPicker();
+
+    $result = Flatpickr::dehydrateFlatpickr($component, '2024');
+
+    expect($result)->toBeInstanceOf(CarbonInterface::class)
+        ->and($result->format('Y'))->toBe('2024');
+});
+
 it('parses carbon instances for time-only dehydration output', function () {
     $component = Flatpickr::make('start_time')
         ->timePicker()
