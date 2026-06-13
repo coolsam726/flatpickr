@@ -5,12 +5,10 @@ import localeData from 'dayjs/plugin/localeData'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import flatpickr from 'flatpickr'
-import flatpickrLocales from "flatpickr/dist/l10n"
+import flatpickrLocales from 'flatpickr/dist/l10n'
 
-import ConfirmDate from "flatpickr/dist/esm/plugins/confirmDate/confirmDate.js"
-import MonthSelect from "flatpickr/dist/esm/plugins/monthSelect/index.js"
-import WeekSelect from "flatpickr/dist/esm/plugins/weekSelect/weekSelect.js"
-// import rangePlugin from 'flatpickr/dist/plugins/rangePlugin.js'
+import MonthSelect from 'flatpickr/dist/esm/plugins/monthSelect/index.js'
+import WeekSelect from 'flatpickr/dist/esm/plugins/weekSelect/weekSelect.js'
 
 dayjs.extend(advancedFormat)
 dayjs.extend(customParseFormat)
@@ -20,6 +18,48 @@ dayjs.extend(utc)
 
 window.dayjs = dayjs
 
+function resolveLocale(localeConfig) {
+  if (localeConfig === null || localeConfig === undefined) {
+    return flatpickrLocales.en
+  }
+
+  if (typeof localeConfig === 'string') {
+    return flatpickrLocales[localeConfig] ?? flatpickrLocales.en
+  }
+
+  if (typeof localeConfig === 'object') {
+    const localeCode = localeConfig.locale ?? 'en'
+    const baseLocale = flatpickrLocales[localeCode] ?? flatpickrLocales.en
+
+    return {
+      ...baseLocale,
+      ...localeConfig,
+    }
+  }
+
+  return flatpickrLocales.en
+}
+
+function resolveDayjsLocale(localeConfig) {
+  if (typeof localeConfig === 'string') {
+    return locales[localeConfig] ?? locales.en
+  }
+
+  if (typeof localeConfig === 'object' && localeConfig?.locale) {
+    return locales[localeConfig.locale] ?? locales.en
+  }
+
+  return locales.en
+}
+
+function normalizeState(state) {
+  if (state === null || state === undefined || state === '') {
+    return null
+  }
+
+  return state
+}
+
 export default function flatpickrComponent(state, attrs) {
   const timezone = dayjs.tz.guess()
 
@@ -28,52 +68,98 @@ export default function flatpickrComponent(state, attrs) {
     attrs,
     timezone,
 
-    locale: String(attrs.locale),
-
     fp: null,
 
-    init: function() {
-      console.log('INit flatpickr', this.state, this.attrs)
-      Livewire.on('attributes-updated', (props) => {
-        console.log('Attributes updated', props)
+    init: function () {
+      this.initFlatpickr()
+
+      this.$watch('state', (value) => {
+        this.syncPickerFromState(value)
       })
-      const customLocale = flatpickrLocales[this.locale] ?? flatpickrLocales['en'];
-      const plugins = [
-        // new ConfirmDate({
-        //   showAlways: false,
-        // }),
-      ];
+    },
+
+    initFlatpickr: function () {
+      if (this.fp) {
+        this.fp.destroy()
+        this.fp = null
+      }
+
+      const localeConfig = this.attrs.locale ?? 'en'
+      const customLocale = resolveLocale(localeConfig)
+      const plugins = []
+
       if (this.attrs.monthPicker) {
-        plugins.push(new MonthSelect({
-          shorthand: this.attrs.monthPickerShorthand || false,
-          dateFormat: this.attrs.dateFormat || 'Y-m',
-          altFormat: this.attrs.altFormat || 'F Y',
-        }))
+        plugins.push(
+          new MonthSelect({
+            shorthand: this.attrs.monthPickerShorthand || false,
+            dateFormat: this.attrs.dateFormat || 'Y-m',
+            altFormat: this.attrs.altFormat || 'F Y',
+          }),
+        )
       } else if (this.attrs.weekPicker) {
-        plugins.push(new WeekSelect({
-        }))
+        plugins.push(new WeekSelect({}))
       }
-      if (this.attrs.rangePicker) {
-        // plugins.push(new rangePlugin({
-        // }))
-      }
+
       const config = {
         disableMobile: true,
-        initialDate: this.state,
-        defaultDate: this.state,
+        initialDate: normalizeState(this.state),
+        defaultDate: normalizeState(this.state),
         static: false,
         altInput: true,
         ...this.attrs,
+        locale: customLocale,
         plugins,
+        onChange: (selectedDates, dateStr) => {
+          this.state = selectedDates.length === 0 ? null : dateStr
+        },
+        onClose: () => {
+          if (!this.fp || !this.attrs.allowInput) {
+            return
+          }
+
+          const inputValue = this.fp.altInput?.value ?? this.fp.input.value
+
+          if (inputValue === '') {
+            this.fp.clear()
+            this.state = null
+
+            return
+          }
+
+          const parsed = this.fp.parseDate(inputValue, this.fp.config.dateFormat)
+
+          if (parsed) {
+            this.fp.setDate(parsed, false)
+            this.state = this.fp.input.value
+          }
+        },
       }
-      dayjs.locale(locales[this.locale] ?? locales['en'])
+
+      dayjs.locale(resolveDayjsLocale(localeConfig))
       flatpickr.localize(customLocale)
-      this.fp = flatpickr(this.$refs.input, config);
-      this.fp.parseDate(this.state, this.fp.config.dateFormat);
+
+      this.fp = flatpickr(this.$refs.input, config)
+
+      if (this.state) {
+        this.syncPickerFromState(this.state)
+      }
     },
-    updateAttributes(attrs) {
-        console.log('Update attributes', attrs)
-    }
+
+    syncPickerFromState: function (value) {
+      if (!this.fp) {
+        return
+      }
+
+      const normalized = normalizeState(value)
+
+      if (normalized === null) {
+        this.fp.clear()
+
+        return
+      }
+
+      this.fp.setDate(normalized, false)
+    },
   }
 }
 

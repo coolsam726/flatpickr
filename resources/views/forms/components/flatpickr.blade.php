@@ -28,7 +28,6 @@
 >
     <link rel="stylesheet" id="pickr-theme" type="text/css" href="{{$getThemeAsset()}}">
     <x-filament::input.wrapper
-            wire:ignore
             :disabled="$isDisabled"
             :inline-prefix="$isPrefixInline"
             :inline-suffix="$isSuffixInline"
@@ -69,6 +68,7 @@
             />
         @else
             <div
+                    wire:ignore
                     @if (FilamentView::hasSpaMode())
                         {{-- format-ignore-start --}}x-load="visible || event (ax-modal-opened)"
                     {{-- format-ignore-end --}}
@@ -121,10 +121,3 @@
         </datalist>
     @endif
 </x-dynamic-component>
-@script
-<script>
-    $wire.on('attributes-updated', (args) => {
-        console.log(`Attributes have been updated. What to do?`, args);
-    })
-</script>
-@endscript

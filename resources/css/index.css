@@ -1,15 +1,15 @@
 @import "flatpickr/dist/flatpickr.min.css";
 @import "flatpickr/dist/plugins/monthSelect/style.css";
-@import '../../vendor/filament/filament/resources/css/theme.css';
-
-@source '../../src/**/*';
-@source '../../resources/views/**/*';
-@source '../../vendor/filament/**/*';
 
 .flatpickr-calendar {
     opacity: 1 !important;
-    @apply bg-white dark:bg-gray-800 opacity-100;
+    background-color: #fff;
 }
+
+.dark .flatpickr-calendar {
+    background-color: rgb(31 41 55);
+}
+
 .flatpickr-confirm {
     display: inline-flex;
     align-items: center;

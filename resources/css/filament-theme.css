@@ -1,8 +1,6 @@
 @import '../../vendor/filament/filament/resources/css/theme.css';
 
-@source '../../src/**/*';
 @source '../../resources/views/**/*';
-@source '../../vendor/filament/**/*';
 
 :root {
     --flatpickr-padding-y: 0.5rem;
