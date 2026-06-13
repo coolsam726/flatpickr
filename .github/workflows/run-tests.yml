@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -13,20 +17,14 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest]
-        php: [8.4, 8.3, 8.2]
-        laravel: [12.*, 11.*]
+        php: [8.5, 8.4, 8.3, 8.2]
+        laravel: [13.*, 12.*, 11.*]
         stability: [prefer-lowest, prefer-stable]
-        include:
-          - laravel: 12.*
-            testbench: ^10.0
-            carbon: ^3.8.6
-            pest-plugin-laravel: ^3.1
-            larastan: ^3.1
+        exclude:
+          - laravel: 13.*
+            php: 8.2
           - laravel: 11.*
-            testbench: ^9.0
-            carbon: ^3.8.4
-            pest-plugin-laravel: ^3.1
-            larastan: ^3.1
+            php: 8.5
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
@@ -36,7 +34,6 @@ jobs:
 
       - name: Configure Git line endings
         if: runner.os == 'Windows'
-        shell: bash
         run: git config --global core.autocrlf false
 
       - name: Setup PHP
@@ -52,9 +49,7 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       - name: Install dependencies
-        run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "pestphp/pest-plugin-laravel:${{ matrix.pest-plugin-laravel }}" "nunomaduro/larastan:${{ matrix.larastan }}" --no-interaction --no-update
-          composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+        run: bash .github/scripts/install-test-dependencies.sh "${{ matrix.laravel }}" "${{ matrix.stability }}"
 
       - name: List Installed Dependencies
         run: composer show -D
@@ -64,3 +59,45 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/pest --ci --coverage --min=0
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.php == '8.4' && matrix.laravel == '13.*' && matrix.stability == 'prefer-stable'
+        uses: codecov/codecov-action@v5
+        with:
+          files: build/logs/clover.xml
+          fail_ci_if_error: false
+
+  platform-smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: 8.5
+            laravel: 13.*
+            filament: '5.0'
+          - php: 8.4
+            laravel: 13.*
+            filament: '5.0'
+          - php: 8.2
+            laravel: 12.*
+            filament: '4.0'
+
+    name: Smoke P${{ matrix.php }} - L${{ matrix.laravel }} - F${{ matrix.filament }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: bash .github/scripts/install-smoke-dependencies.sh "${{ matrix.laravel }}" "${{ matrix.php }}" "${{ matrix.filament }}"
+
+      - name: Execute tests
+        run: vendor/bin/pest --ci --no-coverage

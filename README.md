@@ -1,23 +1,21 @@
 <p align="center">
-    <a href="https://github.com/coolsam726/flatpickr/actions?query=workflow%3Arun-tests+branch%3Amain"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/coolsam726/flatpickr/run-tests.yml?branch=main&label=tests&style=for-the-badge&logo=github"></a>
-    <a href='https://github.com/coolsam726/flatpickr/actions/workflows/fix-php-code-style-issues.yml?query=workflow%3A%22Fix+PHP+Code+Styling%22+branch%3Amain'><img alt="Styling" src="https://img.shields.io/github/actions/workflow/status/coolsam726/flatpickr/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=for-the-badge&logo=github"></a>
-    <a href="https://laravel.com"><img alt="Laravel v12.x" src="https://img.shields.io/badge/Laravel-v12.x-FF2D20?style=for-the-badge&logo=laravel"></a>
-    <a href="https://filamentphp.com"><img alt="Filament v4.x" src="https://img.shields.io/badge/FilamentPHP-v4.x-FB70A9?style=for-the-badge&logo=filament"></a>
-    <a href="https://tailwindcss.com"><img alt="Tailwind v4.x" src="https://img.shields.io/badge/Tailwindcss-v4.x-FB70A9?style=for-the-badge&logo=tailwindcss"></a>
-    <a href="https://php.net"><img alt="PHP 8.4" src="https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php"></a>
-    <a href="https://packagist.org/packages/coolsam/flatpickr"><img alt="Packagist" src="https://img.shields.io/packagist/dt/coolsam/flatpickr.svg?style=for-the-badge&logo=count"></a>
+    <a href="https://github.com/coolsam726/flatpickr/actions/workflows/run-tests.yml"><img src="https://github.com/coolsam726/flatpickr/actions/workflows/run-tests.yml/badge.svg" alt="CI"></a>
+    <a href="https://codecov.io/gh/coolsam726/flatpickr"><img src="https://codecov.io/gh/coolsam726/flatpickr/branch/main/graph/badge.svg" alt="Coverage"></a>
+    <a href="https://packagist.org/packages/coolsam/flatpickr"><img src="https://img.shields.io/packagist/v/coolsam/flatpickr.svg" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/coolsam/flatpickr"><img src="https://img.shields.io/packagist/dt/coolsam/flatpickr.svg" alt="Total Downloads"></a>
 </p>
 
-Use **[Flatpickr](https://flatpickr.js.org/)** as your datepicker in the Filament Forms and Panels.
+Use **[Flatpickr](https://flatpickr.js.org/)** as your datepicker in Filament Forms and Panels.
+
 ![image](https://github.com/user-attachments/assets/334ea64a-48c3-48bc-a640-72162802a646)
 
-
 ## Supported Versions
-| Package Version | Supported Filament Version(s) |
-|-----------------|-------------------------------|
-| v2.x            | Filament v2                   |
-| v4.x            | Filament v3                   |
-| v5.x            | Filament v4                   |
+
+| Package | Filament | Laravel | PHP |
+|---------|----------|---------|-----|
+| **v5.x** (current) | 4.x, 5.x | 11.x – 13.x | 8.2 – 8.5 (PHP 8.5 from Laravel 12+; Laravel 13 from PHP 8.3+) |
+| v4.x | 3.x | 10.x – 11.x | 8.1 – 8.3 |
+| v2.x | 2.x | 9.x – 10.x | 8.0 – 8.2 |
 
 ## Installation
 
@@ -50,15 +48,16 @@ You can use the Flatpickr component from this package as:
 * Week Picker,
 * Multiple-Date Picker
 * Month Picker
+* Year Picker
 
 Most of the fluent config methods are similar to [Flatpickr's official](https://flatpickr.js.org/options/) options in naming.
 
-This package is also an extension of [Filament's DateTimePicker](https://filamentphp.com/docs/3.x/forms/fields/date-time-picker), so most of the methods are similar to the ones in the DateTimePicker component. You can use the Flatpickr component as a drop-in replacement for the DateTimePicker component.
+This package is inspired by [Filament's DateTimePicker](https://filamentphp.com/docs/4.x/forms/overview) and can be used as a flexible alternative with Flatpickr-specific options.
 
 Here are some examples of the methods. Refer to Flatpickr's Official Documentation for details on each of the configurations.
 
 ```php
-use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
+use Coolsam\Flatpickr\Forms\Components\Flatpickr;
 
 // Basic, Date Field
 Flatpickr::make('test_field') // Minimal Config as a datepicker
@@ -84,17 +83,18 @@ Flatpickr::make('test_field')
     ->conjunction(',') // Applicable only for the MultiDatePicker: Separate inputs using this conjunction. The package will use this conjunction to explode the inputs to an array.
     ->inline(true) // Display the datepicker inline with the input, instead of using a popover.
     ->disableMobile(true) // Disable mobile-version of the datepicker on mobile devices.
-    ->mode(\Coolsam\FilamentFlatpickr\Enums\FlatpickrMode::RANGE) // Set the mode as single, range or multiple. Alternatively, you can just use ->range() or ->multiple()
-    ->monthSelectorType(\Coolsam\FilamentFlatpickr\Enums\FlatpickrMonthSelectorType::DROPDOWN)
+    ->mode(\Coolsam\Flatpickr\Enums\FlatpickrMode::RANGE) // Set the mode as single, range or multiple. Alternatively, you can just use ->range() or ->multiple()
+    ->monthSelectorType(\Coolsam\Flatpickr\Enums\FlatpickrMonthSelectorType::DROPDOWN)
     ->shorthandCurrentMonth(true)
     ->noCalendar(true) // use this in conjunction with `time()` to have a timePicker
-    ->position(\Coolsam\FilamentFlatpickr\Enums\FlatpickrPosition::AUTO_CENTER)
+    ->position(\Coolsam\Flatpickr\Enums\FlatpickrPosition::AUTO_CENTER)
     ->showMonths(1)
     ->weekNumbers(true)
     ->time24hr(true)
     ->timePicker() // Configure a timepicker out of the box
     ->weekPicker() // configure a week picker out of the box
     ->monthPicker() // configure a month picker out of the box
+    ->yearPicker() // configure a year picker out of the box
     ->rangePicker() // configure a date range picker out of the box
     ->multiplePicker() // Configure a multiple date picker out of the box
 ;
@@ -106,6 +106,7 @@ Flatpickr::make('test_field')
 \Coolsam\Flatpickr\Forms\Components\Flatpickr::make('start_time')->timePicker(),
 \Coolsam\Flatpickr\Forms\Components\Flatpickr::make('week_number')->weekPicker()->format('W Y'),
 \Coolsam\Flatpickr\Forms\Components\Flatpickr::make('month')->monthPicker()->format('Y-m')->displayFormat('F Y'),
+\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('year')->yearPicker(),
 \Coolsam\Flatpickr\Forms\Components\Flatpickr::make('range')->rangePicker(),
 \Coolsam\Flatpickr\Forms\Components\Flatpickr::make('occupied_slots')->multiplePicker()->format('Y-m-d')->displayFormat('F j, Y'),
 ```
@@ -117,7 +118,7 @@ You can set the package's theme globally under the `theme` config  in the `confi
 The `\Coolsam\Flatpickr\Enums\FlatpickrTheme::DEFAULT` theme is already set by default and conforms to the filament design system.
 
 ```php
-use Coolsam\FilamentFlatpickr\Enums\FlatpickrTheme;
+use Coolsam\Flatpickr\Enums\FlatpickrTheme;
 return [
     'theme' => FlatpickrTheme::AIRBNB,
 ];
@@ -126,7 +127,7 @@ See the screenshots below for the different themes.
 
 ## State Types
 The package supports the following state types:
-- `string` or `CarbonInterface` for DateTimePicker, DatePicker, TimePicker, WeekPicker, MonthPicker
+- `string` or `CarbonInterface` for DateTimePicker, DatePicker, TimePicker, WeekPicker, MonthPicker, YearPicker
 - `array` for RangePicker, MultiplePicker (an array of date strings or CarbonInterface instances)
 
 ## Screenshots
