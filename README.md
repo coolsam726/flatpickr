@@ -13,7 +13,7 @@ Use **[Flatpickr](https://flatpickr.js.org/)** as your datepicker in Filament Fo
 
 | Package | Filament | Laravel | PHP |
 |---------|----------|---------|-----|
-| **v5.x** (current) | 4.x, 5.x | 11.x – 13.x | 8.2 – 8.5 |
+| **v5.x** (current) | 4.x, 5.x | 11.x – 13.x | 8.2 – 8.5 (Laravel 13 requires PHP 8.3+) |
 | v4.x | 3.x | 10.x – 11.x | 8.1 – 8.3 |
 | v2.x | 2.x | 9.x – 10.x | 8.0 – 8.2 |
 

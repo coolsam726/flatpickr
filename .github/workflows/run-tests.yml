@@ -32,6 +32,9 @@ jobs:
             carbon: ^3.8.4
             pest-plugin-laravel: ^3.1
             larastan: ^3.1
+        exclude:
+          - laravel: 13.*
+            php: 8.2
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
@@ -58,7 +61,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "pestphp/pest-plugin-laravel:${{ matrix.pest-plugin-laravel }}" "nunomaduro/larastan:${{ matrix.larastan }}" --no-interaction --no-update
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "pestphp/pest-plugin-laravel:${{ matrix.pest-plugin-laravel }}" "nunomaduro/larastan:${{ matrix.larastan }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List Installed Dependencies
@@ -76,3 +80,47 @@ jobs:
         with:
           files: build/logs/clover.xml
           fail_ci_if_error: false
+
+  platform-smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: 8.5
+            laravel: 13.*
+            filament: ^5.0
+            testbench: ^11.0
+            carbon: ^3.8.6
+          - php: 8.4
+            laravel: 13.*
+            filament: ^5.0
+            testbench: ^11.0
+            carbon: ^3.8.6
+          - php: 8.2
+            laravel: 12.*
+            filament: ^4.0
+            testbench: ^10.0
+            carbon: ^3.8.6
+
+    name: Smoke P${{ matrix.php }} - L${{ matrix.laravel }} - F${{ matrix.filament }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "filament/forms:${{ matrix.filament }}" "filament/support:${{ matrix.filament }}" --no-interaction --no-update
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" "nesbot/carbon:${{ matrix.carbon }}" "filament/filament:${{ matrix.filament }}" "pestphp/pest-plugin-laravel:^3.1" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Execute tests
+        run: vendor/bin/pest --ci
