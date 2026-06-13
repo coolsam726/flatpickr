@@ -1,15 +1,21 @@
+# Filament Flatpickr
+
 <p align="center">
-    <a href="https://github.com/coolsam726/flatpickr/actions/workflows/run-tests.yml"><img src="https://github.com/coolsam726/flatpickr/actions/workflows/run-tests.yml/badge.svg" alt="CI"></a>
-    <a href="https://codecov.io/gh/coolsam726/flatpickr"><img src="https://codecov.io/gh/coolsam726/flatpickr/branch/main/graph/badge.svg" alt="Coverage"></a>
-    <a href="https://packagist.org/packages/coolsam/flatpickr"><img src="https://img.shields.io/packagist/v/coolsam/flatpickr.svg" alt="Latest Version on Packagist"></a>
-    <a href="https://packagist.org/packages/coolsam/flatpickr"><img src="https://img.shields.io/packagist/dt/coolsam/flatpickr.svg" alt="Total Downloads"></a>
+    <a href="https://github.com/coolsam726/flatpickr/actions/workflows/run-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/coolsam726/flatpickr/run-tests.yml?branch=main&label=CI&style=for-the-badge&logo=github" alt="CI"></a>
+    <a href="https://codecov.io/gh/coolsam726/flatpickr"><img src="https://img.shields.io/codecov/c/github/coolsam726/flatpickr/main?style=for-the-badge&logo=codecov" alt="Coverage"></a>
+    <a href="https://packagist.org/packages/coolsam/flatpickr"><img src="https://img.shields.io/packagist/v/coolsam/flatpickr?style=for-the-badge&logo=packagist&logoColor=white" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/coolsam/flatpickr"><img src="https://img.shields.io/packagist/dt/coolsam/flatpickr?style=for-the-badge&logo=packagist&logoColor=white" alt="Total Downloads"></a>
 </p>
 
-Use **[Flatpickr](https://flatpickr.js.org/)** as your datepicker in Filament Forms and Panels.
+<p align="center">
+    A Filament form field powered by <a href="https://flatpickr.js.org/">Flatpickr</a> — date, time, range, week, month, year, and multi-date picking with a fluent API.
+</p>
 
-![image](https://github.com/user-attachments/assets/334ea64a-48c3-48bc-a640-72162802a646)
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/334ea64a-48c3-48bc-a640-72162802a646" alt="Filament Flatpickr preview">
+</p>
 
-## Supported Versions
+## Supported versions
 
 | Package | Filament | Laravel | PHP |
 |---------|----------|---------|-----|
@@ -19,179 +25,201 @@ Use **[Flatpickr](https://flatpickr.js.org/)** as your datepicker in Filament Fo
 
 ## Installation
 
-Install the package via composer:
+Install the package with Composer:
 
 ```bash
 composer require coolsam/flatpickr
 ```
 
-Run the installation command to publish the assets and config file:
+Publish assets and configuration:
 
 ```bash
 php artisan flatpickr:install
 ```
-This will publish the config file to `config/flatpickr.php` and the assets to `public/vendor/flatpickr`. The command will also ask you if you would like to overwrite the existing assets and config files if they exist.
-If you choose to overwrite, the existing files will be replaced with the new ones. This is useful if you want to update the package to the latest version there have been changes to the config file or assets in the latest version.
 
-If you are upgrading from a previous version be sure to run the following to ensure assets are up to date
+This publishes `config/flatpickr.php` and assets to `public/vendor/flatpickr`. You will be prompted to overwrite existing files when upgrading.
+
+After upgrading, refresh Filament assets:
+
 ```bash
 php artisan filament:upgrade
 ```
 
-## Usage
-You can do a lot with just one Component: `Flatpickr`
-You can use the Flatpickr component from this package as:
-* DatePicker
-* TimePicker
-* DateTimePicker
-* Range Picker
-* Week Picker,
-* Multiple-Date Picker
-* Month Picker
-* Year Picker
-
-Most of the fluent config methods are similar to [Flatpickr's official](https://flatpickr.js.org/options/) options in naming.
-
-This package is inspired by [Filament's DateTimePicker](https://filamentphp.com/docs/4.x/forms/overview) and can be used as a flexible alternative with Flatpickr-specific options.
-
-Here are some examples of the methods. Refer to Flatpickr's Official Documentation for details on each of the configurations.
+## Quick start
 
 ```php
 use Coolsam\Flatpickr\Forms\Components\Flatpickr;
 
-// Basic, Date Field
-Flatpickr::make('test_field') // Minimal Config as a datepicker
-Flatpickr::make('test_field')
-    ->allowInput() // Allow a user to manually input the date in the textbox (make the textbox editable)
-    ->altInput(true) // Enable the use of Alternative Input (See Flatpickr docs)
-    ->altFormat('F j, Y') // Alternative input format
-    ->time(true) // Turn this into a DateTimePicker
-    ->disabledDates(['2023-07-25','2023-07-26']) // Disable specific dates from being selected.
-    ->minDate(fn() => today()->startOfYear()) // Set the minimum allowed date
-    ->maxDate(fn() => today()) // Set the maximum allowed date.
-    ->hourIncrement(1) // Intervals of incrementing hours in a time picker
-    ->minuteIncrement(10) // Intervals of minute increment in a time picker
-    ->seconds(false) // Enable seconds in a time picker
-    ->defaultSeconds(0) //Initial value of the seconds element, when no date is selected 
-    ->defaultMinute(0) // Initial value of the minutes element, when no date is selected
-    ->allowInvalidPreload() // Initially check if the selected date is valid
-    ->altInputClass('sample-class') // Add a css class for the alt input format
-    ->format('Y-m-d') // Set the main date format
-    ->ariaDateFormat('Y-m-d') // Aria
-    ->clickOpens(true) // Open the datepicker when the input is clicked.
-    ->closeOnSelect(true) // Close the datepicker once the date is selected.
-    ->conjunction(',') // Applicable only for the MultiDatePicker: Separate inputs using this conjunction. The package will use this conjunction to explode the inputs to an array.
-    ->inline(true) // Display the datepicker inline with the input, instead of using a popover.
-    ->disableMobile(true) // Disable mobile-version of the datepicker on mobile devices.
-    ->mode(\Coolsam\Flatpickr\Enums\FlatpickrMode::RANGE) // Set the mode as single, range or multiple. Alternatively, you can just use ->range() or ->multiple()
-    ->monthSelectorType(\Coolsam\Flatpickr\Enums\FlatpickrMonthSelectorType::DROPDOWN)
-    ->shorthandCurrentMonth(true)
-    ->noCalendar(true) // use this in conjunction with `time()` to have a timePicker
-    ->position(\Coolsam\Flatpickr\Enums\FlatpickrPosition::AUTO_CENTER)
-    ->showMonths(1)
-    ->weekNumbers(true)
-    ->time24hr(true)
-    ->timePicker() // Configure a timepicker out of the box
-    ->weekPicker() // configure a week picker out of the box
-    ->monthPicker() // configure a month picker out of the box
-    ->yearPicker() // configure a year picker out of the box
-    ->rangePicker() // configure a date range picker out of the box
-    ->multiplePicker() // Configure a multiple date picker out of the box
-;
+Flatpickr::make('published_at')
+    ->format('Y-m-d')
+    ->minDate(today()->startOfYear())
+    ->maxDate(today());
 ```
 
-## Examples
+## Picker modes
+
+One component covers every Flatpickr mode you need:
+
+| Mode | Helper | Typical format |
+|------|--------|----------------|
+| Date | `Flatpickr::make('date')` | `Y-m-d` |
+| Date & time | `->time(true)` or `->timePicker()` | `Y-m-d H:i` / `H:i` |
+| Range | `->rangePicker()` | array of date strings |
+| Multiple dates | `->multiplePicker()` | array of date strings |
+| Week | `->weekPicker()` | `W Y` |
+| Month | `->monthPicker()` | `Y-m` |
+| Year | `->yearPicker()` | `Y` |
+
+### Short examples
+
 ```php
-// You can also use the component as a DateTimePicker, Range Picker, Week Picker, Month Picker, TimePicker and Multiple Date Picker
-\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('start_time')->timePicker(),
-\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('week_number')->weekPicker()->format('W Y'),
-\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('month')->monthPicker()->format('Y-m')->displayFormat('F Y'),
-\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('year')->yearPicker(),
-\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('range')->rangePicker(),
-\Coolsam\Flatpickr\Forms\Components\Flatpickr::make('occupied_slots')->multiplePicker()->format('Y-m-d')->displayFormat('F j, Y'),
+use Coolsam\Flatpickr\Forms\Components\Flatpickr;
+
+Flatpickr::make('start_time')->timePicker();
+Flatpickr::make('week_number')->weekPicker()->format('W Y');
+Flatpickr::make('month')->monthPicker()->format('Y-m')->displayFormat('F Y');
+Flatpickr::make('year')->yearPicker();
+Flatpickr::make('range')->rangePicker();
+Flatpickr::make('occupied_slots')->multiplePicker()->format('Y-m-d')->displayFormat('F j, Y');
 ```
 
-## Flatpickr Themes (See [Flatpickr Docs](https://flatpickr.js.org/themes/) for more Details)
-> **Note:** I highly recommend that you use the DEFAULT theme, which is styled using tailwind to conform to the filament design system. The other themes come with the flatpickr javascript package and may not conform to your Filament themeing, including dark mode.
+## Configuration
 
-You can set the package's theme globally under the `theme` config  in the `config/flatpickr.php` file. The config accepts a `\Coolsam\Flatpickr\Enums\FlatpickrTheme` enum value.
-The `\Coolsam\Flatpickr\Enums\FlatpickrTheme::DEFAULT` theme is already set by default and conforms to the filament design system.
+Most fluent methods mirror [Flatpickr's options](https://flatpickr.js.org/options/). The API is inspired by [Filament's date/time fields](https://filamentphp.com/docs/4.x/forms/overview) and works as a drop-in alternative with Flatpickr-specific behaviour.
+
+```php
+use Coolsam\Flatpickr\Enums\FlatpickrMode;
+use Coolsam\Flatpickr\Enums\FlatpickrMonthSelectorType;
+use Coolsam\Flatpickr\Enums\FlatpickrPosition;
+use Coolsam\Flatpickr\Forms\Components\Flatpickr;
+
+Flatpickr::make('event_date')
+    ->format('Y-m-d')
+    ->displayFormat('F j, Y')
+    ->allowInput()
+    ->altInput()
+    ->minDate(fn () => today()->startOfYear())
+    ->maxDate(fn () => today())
+    ->disableDates(['2024-07-25', '2024-07-26'])
+    ->rangeSeparator(' to ')
+    ->conjunction(',')
+    ->hourIncrement(1)
+    ->minuteIncrement(10)
+    ->seconds(false)
+    ->weekNumbers()
+    ->time24hr()
+    ->inline()
+    ->disableMobile()
+    ->mode(FlatpickrMode::RANGE) // or ->rangePicker(), ->multiplePicker()
+    ->monthSelectorType(FlatpickrMonthSelectorType::DROPDOWN)
+    ->position(FlatpickrPosition::AUTO_CENTER)
+    ->showMonths(2)
+    ->timePicker()
+    ->weekPicker()
+    ->monthPicker()
+    ->yearPicker()
+    ->rangePicker()
+    ->multiplePicker();
+```
+
+See the [Flatpickr documentation](https://flatpickr.js.org/options/) for details on each option.
+
+## State types
+
+| Picker | Dehydrated state |
+|--------|------------------|
+| Date, time, week, month, year | `string` or `CarbonInterface` |
+| Range, multiple | `array` of date strings or `CarbonInterface` instances |
+
+## Themes
+
+Set the global theme in `config/flatpickr.php` using a `FlatpickrTheme` enum value:
 
 ```php
 use Coolsam\Flatpickr\Enums\FlatpickrTheme;
+
 return [
-    'theme' => FlatpickrTheme::AIRBNB,
+    'theme' => FlatpickrTheme::DEFAULT, // recommended
 ];
 ```
-See the screenshots below for the different themes.
 
-## State Types
-The package supports the following state types:
-- `string` or `CarbonInterface` for DateTimePicker, DatePicker, TimePicker, WeekPicker, MonthPicker, YearPicker
-- `array` for RangePicker, MultiplePicker (an array of date strings or CarbonInterface instances)
+> **Recommendation:** Use the **DEFAULT** theme. It is styled with Tailwind to match Filament, including dark mode. Bundled Flatpickr themes may not align with your panel styling.
+
+Theme previews are included in the [screenshots](#theme-gallery) below.
 
 ## Screenshots
-### Single Date Picker
-![image](https://github.com/user-attachments/assets/015ae745-96bd-4b5a-990a-11bba852aa14)
 
-### Multiple Date Picker
-![image](https://github.com/user-attachments/assets/d896aa05-7907-4957-8d46-1d51d1393b91)
+### Picker modes
 
-### Date Range Picker
-![image](https://github.com/user-attachments/assets/3bcac5ad-5bfc-4a33-a320-3027c1e6a086)
+#### Single date
 
-### Date-Time Picker
-![image](https://github.com/user-attachments/assets/1529a743-1c03-46b9-b0f5-0076e0a6b7e3)
+![Single date picker](https://github.com/user-attachments/assets/015ae745-96bd-4b5a-990a-11bba852aa14)
 
-### Time-Only Picker
-![image](https://github.com/user-attachments/assets/f6bab802-6d9a-468e-a6fc-b8fd74454656)
+#### Multiple dates
 
-### Show Multiple Months
-![image](https://github.com/user-attachments/assets/0ea2e9f2-22df-45d3-a3d1-6430f283e6e0)
+![Multiple date picker](https://github.com/user-attachments/assets/d896aa05-7907-4957-8d46-1d51d1393b91)
 
-### Week Picker
-![image](https://github.com/user-attachments/assets/ea648d29-1bc2-46b7-9d82-301f500fab78)
+#### Date range
 
-### Month Picker
-![image](https://github.com/user-attachments/assets/e542c3d7-08ac-411d-874b-7ae0718ea000)
+![Date range picker](https://github.com/user-attachments/assets/3bcac5ad-5bfc-4a33-a320-3027c1e6a086)
 
-### Flatpickr Themes
+#### Date & time
 
-**DEFAULT**
+![Date-time picker](https://github.com/user-attachments/assets/1529a743-1c03-46b9-b0f5-0076e0a6b7e3)
 
-![image](https://github.com/user-attachments/assets/ee615ae7-9956-45d6-a4d1-48054babf16c)
+#### Time only
 
-**AIRBNB**
+![Time-only picker](https://github.com/user-attachments/assets/f6bab802-6d9a-468e-a6fc-b8fd74454656)
 
-![image](https://github.com/user-attachments/assets/6ec6e97d-e8ce-4d93-b27b-21fcead8d644)
+#### Multiple months
 
-**LIGHT**
+![Show multiple months](https://github.com/user-attachments/assets/0ea2e9f2-22df-45d3-a3d1-6430f283e6e0)
 
-![image](https://github.com/user-attachments/assets/fa190cb6-1bb4-4175-8733-bf261350c29c)
+#### Week
 
-**DARK**
+![Week picker](https://github.com/user-attachments/assets/ea648d29-1bc2-46b7-9d82-301f500fab78)
 
-![image](https://github.com/user-attachments/assets/ddd59f71-5fdc-469f-91be-37e7c4e67fb9)
+#### Month
 
-**CONFETTI**
+![Month picker](https://github.com/user-attachments/assets/e542c3d7-08ac-411d-874b-7ae0718ea000)
 
-![image](https://github.com/user-attachments/assets/2c76e329-678c-4443-ab42-ab4fd7230320)
+### Theme gallery
 
-**MATERIAL_BLUE**
+#### Default (recommended)
 
-![image](https://github.com/user-attachments/assets/db5074f8-22ad-493d-84e1-8e505f0c55be)
+![Default theme](https://github.com/user-attachments/assets/ee615ae7-9956-45d6-a4d1-48054babf16c)
 
-**MATERIAL_GREEN**
+#### Airbnb
 
-![image](https://github.com/user-attachments/assets/9d843720-4ef0-4768-ad71-1975a94922e0)
+![Airbnb theme](https://github.com/user-attachments/assets/6ec6e97d-e8ce-4d93-b27b-21fcead8d644)
 
-**MATERIAL_ORANGE**
+#### Light
 
-![image](https://github.com/user-attachments/assets/74021b21-2244-448b-8177-04e888db82c9)
+![Light theme](https://github.com/user-attachments/assets/fa190cb6-1bb4-4175-8733-bf261350c29c)
 
-**MATERIAL_RED**
+#### Dark
 
-![image](https://github.com/user-attachments/assets/936fbdc7-f73a-437d-88e4-c333a193a72b)
+![Dark theme](https://github.com/user-attachments/assets/ddd59f71-5fdc-469f-91be-37e7c4e67fb9)
+
+#### Confetti
+
+![Confetti theme](https://github.com/user-attachments/assets/2c76e329-678c-4443-ab42-ab4fd7230320)
+
+#### Material Blue
+
+![Material Blue theme](https://github.com/user-attachments/assets/db5074f8-22ad-493d-84e1-8e505f0c55be)
+
+#### Material Green
+
+![Material Green theme](https://github.com/user-attachments/assets/9d843720-4ef0-4768-ad71-1975a94922e0)
+
+#### Material Orange
+
+![Material Orange theme](https://github.com/user-attachments/assets/74021b21-2244-448b-8177-04e888db82c9)
+
+#### Material Red
+
+![Material Red theme](https://github.com/user-attachments/assets/936fbdc7-f73a-437d-88e4-c333a193a72b)
 
 ## Testing
 
@@ -201,15 +229,15 @@ composer test
 
 ## Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+See [CHANGELOG](CHANGELOG.md) for release notes.
 
 ## Contributing
 
-Please see [CONTRIBUTING](https://github.com/savannabits/.github/blob/main/CONTRIBUTING.md) for details.
+See [CONTRIBUTING](.github/CONTRIBUTING.md) for guidelines.
 
-## Security Vulnerabilities
+## Security
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Report vulnerabilities according to [our security policy](../../security/policy).
 
 ## Credits
 
@@ -218,4 +246,4 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License. See [LICENSE.md](LICENSE.md).
