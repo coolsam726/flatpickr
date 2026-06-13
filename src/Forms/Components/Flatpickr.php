@@ -341,6 +341,29 @@ class Flatpickr extends Field
         ];
     }
 
+    protected function resolveRangeEndStateValue(mixed $state): ?string
+    {
+        if (blank($state)) {
+            return null;
+        }
+
+        $dates = is_array($state)
+            ? $state
+            : static::splitRangeString((string) $state, $this, allowBruteForce: false);
+
+        if (count($dates) < 2 || blank($dates[1])) {
+            return null;
+        }
+
+        $end = $this->parseToCarbon($dates[1]);
+
+        if (! $end) {
+            return null;
+        }
+
+        return $end->format($this->getFormat());
+    }
+
     protected function syncRangeEndField(mixed $state, Set $set): void
     {
         if (blank($state)) {
@@ -349,11 +372,13 @@ class Flatpickr extends Field
             return;
         }
 
-        $dates = is_array($state)
-            ? $state
-            : static::splitRangeString((string) $state, $this);
+        $endValue = $this->resolveRangeEndStateValue($state);
 
-        $set($this->getRangeEndField(), $dates[1] ?? null);
+        if ($endValue === null) {
+            return;
+        }
+
+        $set($this->getRangeEndField(), $endValue);
     }
 
     // Methods needed by the view
@@ -720,7 +745,7 @@ class Flatpickr extends Field
         return $state;
     }
 
-    protected static function splitRangeString(string $state, Flatpickr $component): array
+    protected static function splitRangeString(string $state, Flatpickr $component, bool $allowBruteForce = true): array
     {
         $state = trim($state);
 
@@ -737,6 +762,10 @@ class Flatpickr extends Field
         $matches = self::extractDateMatches($state, $component);
         if (count($matches) >= 2) {
             return [$matches[0], $matches[1]];
+        }
+
+        if (! $allowBruteForce) {
+            return [$state];
         }
 
         $len = strlen($state);

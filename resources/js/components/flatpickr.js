@@ -72,6 +72,23 @@ function parseConstraintValue(value) {
   return value
 }
 
+function isRangeMode(attrs) {
+  return attrs.mode === 'range' || attrs.rangePicker === true
+}
+
+function formatSelectedDates(fp, selectedDates, attrs) {
+  if (!selectedDates?.length || !fp) {
+    return null
+  }
+
+  const format = fp.config.dateFormat ?? attrs.dateFormat ?? 'Y-m-d'
+  const separator = isRangeMode(attrs)
+    ? (fp.l10n?.rangeSeparator ?? attrs.rangeSeparator ?? ' to ')
+    : (attrs.conjunction ?? ', ')
+
+  return selectedDates.map((date) => fp.formatDate(date, format)).join(separator)
+}
+
 export default function flatpickrComponent(state, attrs) {
   const timezone = dayjs.tz.guess()
 
@@ -186,10 +203,16 @@ export default function flatpickrComponent(state, attrs) {
             return
           }
 
-          this.state = selectedDates.length === 0 ? null : dateStr
+          if (selectedDates.length === 0) {
+            this.state = null
+
+            return
+          }
+
+          this.state = formatSelectedDates(this.fp, selectedDates, this.attrs) ?? dateStr
         },
         onClose: () => {
-          this.commitManualInput()
+          this.syncStateFromPicker()
         },
       }
 
@@ -219,8 +242,28 @@ export default function flatpickrComponent(state, attrs) {
       })
     },
 
+    syncStateFromPicker: function () {
+      if (!this.fp) {
+        return
+      }
+
+      if (isRangeMode(this.attrs)) {
+        this.state = formatSelectedDates(this.fp, this.fp.selectedDates, this.attrs)
+
+        return
+      }
+
+      this.commitManualInput()
+    },
+
     commitManualInput: function () {
       if (!this.fp) {
+        return
+      }
+
+      if (isRangeMode(this.attrs)) {
+        this.state = formatSelectedDates(this.fp, this.fp.selectedDates, this.attrs)
+
         return
       }
 

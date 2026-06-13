@@ -114,3 +114,43 @@ it('extracts datetime matches from concatenated range strings', function () {
 
     expect($parts)->toBe(['2024-06-14 07:00', '2024-06-17 17:00']);
 });
+
+it('does not resolve a range end value until both dates are selected', function () {
+    $component = Flatpickr::make('starts_at')
+        ->rangePicker()
+        ->rangeEnd('ends_at')
+        ->time(true)
+        ->format('Y-m-d H:i');
+
+    $method = new ReflectionMethod($component, 'resolveRangeEndStateValue');
+
+    expect($method->invoke($component, '2024-06-14 07:00'))->toBeNull();
+});
+
+it('resolves a formatted datetime for the range end when the range is complete', function () {
+    $component = Flatpickr::make('starts_at')
+        ->rangePicker()
+        ->rangeEnd('ends_at')
+        ->time(true)
+        ->format('Y-m-d H:i')
+        ->rangeSeparator(' to ');
+
+    $method = new ReflectionMethod($component, 'resolveRangeEndStateValue');
+
+    expect($method->invoke($component, '2024-06-14 07:00 to 2024-06-17 17:00'))->toBe('2024-06-17 17:00');
+});
+
+it('dehydrates datetime ends without dropping the time component', function () {
+    $component = Flatpickr::make('starts_at')
+        ->rangePicker()
+        ->rangeEnd('ends_at')
+        ->time(true)
+        ->format('Y-m-d H:i')
+        ->rangeSeparator(' to ');
+
+    $dehydrated = $component->getStateToDehydrate('2024-06-14 07:00 to 2024-06-17 17:00');
+
+    expect($dehydrated['starts_at'])->toBe('2024-06-14 07:00')
+        ->and($dehydrated['ends_at'])->toBe('2024-06-17 17:00')
+        ->and($dehydrated['ends_at'])->not->toBe('2024-06-17 00:00');
+});
