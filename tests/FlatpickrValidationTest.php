@@ -82,3 +82,63 @@ it('does not register min and max date rules for range pickers', function () {
     expect($stringRules)->not->toContain('after_or_equal:2024-01-01')
         ->and($stringRules)->not->toContain('before_or_equal:2024-12-31');
 });
+
+it('skips multiple picker validation when the value is blank', function () {
+    $component = Flatpickr::make('dates')
+        ->multiplePicker()
+        ->format('Y-m-d')
+        ->conjunction(',');
+
+    $closureRule = collect($component->getValidationRules())
+        ->first(fn ($rule) => $rule instanceof Closure);
+
+    $validator = Validator::make(['dates' => ''], ['dates' => [$closureRule]]);
+
+    expect($validator->passes())->toBeTrue();
+});
+
+it('skips range picker validation when the value is blank', function () {
+    $component = Flatpickr::make('range')
+        ->rangePicker()
+        ->format('Y-m-d');
+
+    $closureRule = collect($component->getValidationRules())
+        ->first(fn ($rule) => $rule instanceof Closure);
+
+    $validator = Validator::make(['range' => ''], ['range' => [$closureRule]]);
+
+    expect($validator->passes())->toBeTrue();
+});
+
+it('accepts valid multiple picker values', function () {
+    $component = Flatpickr::make('dates')
+        ->multiplePicker()
+        ->format('Y-m-d')
+        ->conjunction(',');
+
+    $closureRule = collect($component->getValidationRules())
+        ->first(fn ($rule) => $rule instanceof Closure);
+
+    $validator = Validator::make(
+        ['dates' => '2024-06-01,2024-06-15'],
+        ['dates' => [$closureRule]],
+    );
+
+    expect($validator->passes())->toBeTrue();
+});
+
+it('accepts valid range picker values', function () {
+    $component = Flatpickr::make('range')
+        ->rangePicker()
+        ->format('Y-m-d');
+
+    $closureRule = collect($component->getValidationRules())
+        ->first(fn ($rule) => $rule instanceof Closure);
+
+    $validator = Validator::make(
+        ['range' => '2024-06-01 to 2024-06-15'],
+        ['range' => [$closureRule]],
+    );
+
+    expect($validator->passes())->toBeTrue();
+});

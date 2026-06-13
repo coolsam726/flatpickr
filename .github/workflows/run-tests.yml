@@ -58,7 +58,7 @@ jobs:
         run: vendor/bin/pint --test
 
       - name: Execute tests
-        run: vendor/bin/pest --ci --coverage --min=0
+        run: vendor/bin/pest --ci --coverage --min=96
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.php == '8.4' && matrix.laravel == '13.*' && matrix.stability == 'prefer-stable'
