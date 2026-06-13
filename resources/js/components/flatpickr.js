@@ -5,7 +5,9 @@ import localeData from 'dayjs/plugin/localeData'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import flatpickr from 'flatpickr'
-import flatpickrLocales from 'flatpickr/dist/l10n'
+import flatpickrLocalesImport from 'flatpickr/dist/l10n'
+
+const flatpickrLocales = flatpickrLocalesImport.default ?? flatpickrLocalesImport
 
 import MonthSelect from 'flatpickr/dist/esm/plugins/monthSelect/index.js'
 import WeekSelect from 'flatpickr/dist/esm/plugins/weekSelect/weekSelect.js'
@@ -31,9 +33,11 @@ function resolveLocale(localeConfig) {
     const localeCode = localeConfig.locale ?? 'en'
     const baseLocale = flatpickrLocales[localeCode] ?? flatpickrLocales.en
 
+    const { locale: _locale, ...overrides } = localeConfig
+
     return {
       ...baseLocale,
-      ...localeConfig,
+      ...overrides,
     }
   }
 
