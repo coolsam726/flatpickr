@@ -136,6 +136,8 @@ class Flatpickr extends Field
 
     protected bool | Closure $monthPicker = false;
 
+    protected bool | Closure $yearPicker = false;
+
     protected bool | Closure $rangePicker = false;
 
     protected bool | Closure $multiplePicker = false;
@@ -170,6 +172,10 @@ class Flatpickr extends Field
 
         if ($format !== null) {
             return $format;
+        }
+
+        if ($this->isYearPicker()) {
+            return 'Y';
         }
 
         if ($this->isTimePicker() || ($this->hasTime() && ! $this->hasDate())) {
@@ -992,6 +998,13 @@ class Flatpickr extends Field
         return $this;
     }
 
+    public function yearPicker(Closure | bool $yearPicker = true): Flatpickr
+    {
+        $this->yearPicker = $yearPicker;
+
+        return $this;
+    }
+
     public function rangePicker(Closure | bool $rangePicker = true): Flatpickr
     {
         $this->rangePicker = $rangePicker;
@@ -1205,6 +1218,11 @@ class Flatpickr extends Field
         return FilamentFlatpickr::getBool($this->evaluate($this->monthPicker));
     }
 
+    public function isYearPicker(): bool
+    {
+        return FilamentFlatpickr::getBool($this->evaluate($this->yearPicker));
+    }
+
     public function isRangePicker(): bool
     {
         return FilamentFlatpickr::getBool($this->evaluate($this->rangePicker) || $this->getMode()->value === FlatpickrMode::RANGE->value);
@@ -1334,6 +1352,15 @@ class Flatpickr extends Field
         }
         if (filled($this->isMonthPicker())) {
             $attrs->put('monthPicker', FilamentFlatpickr::getBool($this->isMonthPicker()));
+        }
+        if (filled($this->isYearPicker())) {
+            $isYearPicker = FilamentFlatpickr::getBool($this->isYearPicker());
+            $attrs->put('yearPicker', $isYearPicker);
+
+            if ($isYearPicker) {
+                $attrs->put('dateFormat', 'Y');
+                $attrs->put('altFormat', $this->getDisplayFormat() ?? 'Y');
+            }
         }
         if (filled($this->getLocale())) {
             $attrs->put('locale', $this->getLocale());
