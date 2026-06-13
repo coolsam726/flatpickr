@@ -93,6 +93,20 @@ Uses existing `dehydrateFlatpickr()` parsing (separator, regex, brute-force spli
 
 Blank picker state clears both paths.
 
+#### Date & time ranges
+
+Combine `->time(true)` with a datetime `format()`. Use `displayFormat()` for human-readable input text (Flatpickr format tokens). Split dehydration via `rangeEnd()` works the same way:
+
+```php
+Flatpickr::make('starts_at')
+    ->rangePicker()
+    ->rangeEnd('ends_at')
+    ->time(true)
+    ->format('Y-m-d H:i')
+    ->displayFormat('M j, Y h:i K')
+    ->rangeSeparator(' to ');
+```
+
 #### Validation
 
 Existing range validation on the primary field still validates the combined / array value. Rules on `ends_at` (e.g. `after:starts_at`) work because the end field is synced live.

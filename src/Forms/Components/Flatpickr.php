@@ -754,16 +754,34 @@ class Flatpickr extends Field
 
     protected static function extractDateMatches(string $state, Flatpickr $component): array
     {
-        $format = $component->getFormat();
-        $pattern = preg_quote($format, '/');
-        $pattern = str_replace(['d', 'm', 'Y', 'y'], ['\\d{1,2}', '\\d{1,2}', '\\d{4}', '\\d{2}'], $pattern);
-        $pattern = '/' . $pattern . '/';
+        $pattern = self::formatToRegexPattern($component->getFormat());
 
         if (preg_match_all($pattern, $state, $matches)) {
             return $matches[0];
         }
 
         return [];
+    }
+
+    protected static function formatToRegexPattern(string $format): string
+    {
+        $regex = '';
+
+        for ($i = 0; $i < strlen($format); $i++) {
+            $regex .= match ($format[$i]) {
+                'Y' => '\\d{4}',
+                'y' => '\\d{2}',
+                'm', 'n' => '\\d{1,2}',
+                'd', 'j' => '\\d{1,2}',
+                'H' => '\\d{1,2}',
+                'h', 'g' => '\\d{1,2}',
+                'i' => '\\d{2}',
+                's', 'S' => '\\d{2}',
+                default => preg_quote($format[$i], '/'),
+            };
+        }
+
+        return '/' . $regex . '/';
     }
 
     protected function setUp(): void
