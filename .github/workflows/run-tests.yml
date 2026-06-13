@@ -138,4 +138,4 @@ jobs:
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: vendor/bin/pest --ci
+        run: vendor/bin/pest --ci --no-coverage
