@@ -5,7 +5,7 @@
 | **Status** | Implemented |
 | **Author** | @coolsam726 |
 | **Created** | 2026-06-13 |
-| **Implemented in** | _see merging PR_ |
+| **Implemented in** | [#153](https://github.com/coolsam726/flatpickr/pull/153) |
 
 ## Summary
 
