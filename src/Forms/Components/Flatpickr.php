@@ -524,7 +524,7 @@ class Flatpickr extends Field
         }
     }
 
-    public static function dehydrateFlatpickr(Flatpickr $component, $state): array|CarbonInterface|null
+    public static function dehydrateFlatpickr(Flatpickr $component, $state): array | CarbonInterface | null
     {
         if (blank($state)) {
             return null;
@@ -532,11 +532,11 @@ class Flatpickr extends Field
 
         $component->rule(
             'date',
-            static fn(Flatpickr $component): bool => $component->isMultiplePicker() && !$component->isRangePicker() && $component->hasDate(),
+            static fn (Flatpickr $component): bool => $component->isMultiplePicker() && ! $component->isRangePicker() && $component->hasDate(),
         );
 
         // try to convert the state to a Carbon instance
-        if (!($component->isMultiplePicker() || $component->isRangePicker())) {
+        if (! ($component->isMultiplePicker() || $component->isRangePicker())) {
             try {
                 $res = $component->parseToCarbon($state);
                 if ($res) {
@@ -547,7 +547,7 @@ class Flatpickr extends Field
             }
         }
 
-        if (!$state instanceof CarbonInterface) {
+        if (! $state instanceof CarbonInterface) {
             if (is_string($state)) {
                 if ($component->isRangePicker()) {
                     $range = self::splitRangeString($state, $component);
@@ -560,23 +560,23 @@ class Flatpickr extends Field
                 return collect($range)->map(function ($date) use ($component) {
                     $parsed = $component->parseToCarbon($date);
 
-                    if (!$parsed) {
+                    if (! $parsed) {
                         return null;
                     }
 
                     $parsed = $parsed->setTimezone($component->getTimezone());
 
-                    if (!$component->isNative()) {
+                    if (! $component->isNative()) {
                         return $parsed->format($component->getFormat());
                     }
 
-                    if (!$component->hasTime()) {
+                    if (! $component->hasTime()) {
                         return $parsed->toDateString();
                     }
 
                     $precision = $component->hasSeconds() ? 'second' : 'minute';
 
-                    if (!$component->hasDate()) {
+                    if (! $component->hasDate()) {
                         return $parsed->toTimeString($precision);
                     }
 
@@ -625,6 +625,7 @@ class Flatpickr extends Field
 
         return [];
     }
+
     protected function setUp(): void
     {
         parent::setUp();

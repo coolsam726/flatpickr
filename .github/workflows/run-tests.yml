@@ -54,5 +54,8 @@ jobs:
       - name: List Installed Dependencies
         run: composer show -D
 
+      - name: Check code style
+        run: vendor/bin/pint --test
+
       - name: Execute tests
         run: vendor/bin/pest --ci --coverage --min=0
