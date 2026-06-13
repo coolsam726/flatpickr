@@ -11,9 +11,12 @@ use Coolsam\Flatpickr\Enums\FlatpickrPosition;
 use Coolsam\Flatpickr\Enums\FlatpickrTheme;
 use Coolsam\Flatpickr\FilamentFlatpickr;
 use Filament\Forms\Components\Field;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Illuminate\View\ComponentAttributeBag;
 
 class Flatpickr extends Field
@@ -140,6 +143,8 @@ class Flatpickr extends Field
 
     protected bool | Closure $rangePicker = false;
 
+    protected string | Closure | null $rangeEndField = null;
+
     protected bool | Closure $multiplePicker = false;
 
     protected bool | Closure $timePicker = false;
@@ -255,6 +260,100 @@ class Flatpickr extends Field
     public function getRangeSeparator(): string
     {
         return $this->evaluate($this->rangeSeparator);
+    }
+
+    public function rangeEnd(string | Closure | null $field): static
+    {
+        $this->rangeEndField = $field;
+
+        return $this;
+    }
+
+    public function getRangeEndField(): ?string
+    {
+        return $this->evaluate($this->rangeEndField);
+    }
+
+    public function hasRangeEndField(): bool
+    {
+        return filled($this->getRangeEndField());
+    }
+
+    public function getRangeEndStatePath(): string
+    {
+        $endField = (string) $this->getRangeEndField();
+
+        if (isset($this->container)) {
+            return $this->resolveRelativeStatePath($endField);
+        }
+
+        if (! filled($this->statePath)) {
+            return $endField;
+        }
+
+        if (str_contains($this->statePath, '.')) {
+            return Str::beforeLast($this->statePath, '.') . '.' . $endField;
+        }
+
+        return $endField;
+    }
+
+    protected function getDehydrationStatePath(): string
+    {
+        if (isset($this->container)) {
+            return $this->getStatePath();
+        }
+
+        return $this->statePath ?? '';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getStateToDehydrate(mixed $state): array
+    {
+        if (! ($this->hasRangeEndField() && $this->isRangePicker())) {
+            return parent::getStateToDehydrate($state);
+        }
+
+        if ($state === '') {
+            $state = null;
+        }
+
+        foreach ($this->getStateCasts() as $stateCast) {
+            $state = $stateCast->get($state);
+        }
+
+        $dehydrated = static::dehydrateFlatpickr($this, $state);
+
+        if (! is_array($dehydrated)) {
+            return [
+                $this->getDehydrationStatePath() => $dehydrated,
+                $this->getRangeEndStatePath() => null,
+            ];
+        }
+
+        [$start, $end] = array_pad($dehydrated, 2, null);
+
+        return [
+            $this->getDehydrationStatePath() => $start,
+            $this->getRangeEndStatePath() => $end,
+        ];
+    }
+
+    protected function syncRangeEndField(mixed $state, Set $set): void
+    {
+        if (blank($state)) {
+            $set($this->getRangeEndField(), null);
+
+            return;
+        }
+
+        $dates = is_array($state)
+            ? $state
+            : static::splitRangeString((string) $state, $this);
+
+        $set($this->getRangeEndField(), $dates[1] ?? null);
     }
 
     // Methods needed by the view
@@ -671,10 +770,35 @@ class Flatpickr extends Field
     {
         parent::setUp();
 
-        $this->afterStateHydrated(fn (Flatpickr $component, $state) => $component->hydrateFlatpickr(
-            $component,
-            $state
-        ));
+        $this->afterStateHydrated(function (Flatpickr $component, $state, Get $get): void {
+            if ($component->hasRangeEndField() && $component->isRangePicker()) {
+                $endState = $get($component->getRangeEndField());
+
+                if (
+                    is_string($state)
+                    && filled($component->getRangeSeparator())
+                    && str($state)->contains($component->getRangeSeparator())
+                ) {
+                    $component->hydrateFlatpickr($component, $state);
+
+                    return;
+                }
+
+                if (filled($state) && filled($endState)) {
+                    $component->hydrateFlatpickr($component, [$state, $endState]);
+
+                    return;
+                }
+            }
+
+            $component->hydrateFlatpickr($component, $state);
+        });
+
+        $this->afterStateUpdated(function (Flatpickr $component, $state, Set $set): void {
+            if ($component->hasRangeEndField() && $component->isRangePicker()) {
+                $component->syncRangeEndField($state, $set);
+            }
+        });
 
         $this->dehydrateStateUsing(fn (Flatpickr $component, $state) => $component::dehydrateFlatpickr(
             $component,
