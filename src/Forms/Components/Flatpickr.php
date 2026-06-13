@@ -524,7 +524,7 @@ class Flatpickr extends Field
         }
     }
 
-    public static function dehydrateFlatpickr(Flatpickr $component, $state): array | CarbonInterface | null
+    public static function dehydrateFlatpickr(Flatpickr $component, $state): array|CarbonInterface|null
     {
         if (blank($state)) {
             return null;
@@ -532,26 +532,25 @@ class Flatpickr extends Field
 
         $component->rule(
             'date',
-            static fn (Flatpickr $component): bool => $component->isMultiplePicker() && ! $component->isRangePicker() && $component->hasDate(),
+            static fn(Flatpickr $component): bool => $component->isMultiplePicker() && !$component->isRangePicker() && $component->hasDate(),
         );
 
         // try to convert the state to a Carbon instance
-        if (! ($component->isMultiplePicker() || $component->isRangePicker())) {
+        if (!($component->isMultiplePicker() || $component->isRangePicker())) {
             try {
                 $res = $component->parseToCarbon($state);
                 if ($res) {
                     $state = $res;
                 }
             } catch (InvalidFormatException $exception) {
-                // if it fails, return the state as is
                 return $state;
             }
         }
 
-        if (! $state instanceof CarbonInterface) {
+        if (!$state instanceof CarbonInterface) {
             if (is_string($state)) {
                 if ($component->isRangePicker()) {
-                    $range = str($state)->explode(' to ');
+                    $range = self::splitRangeString($state, $component);
                 } elseif ($component->isMultiplePicker()) {
                     $range = str($state)->explode($component->getConjunction());
                 } else {
@@ -559,25 +558,30 @@ class Flatpickr extends Field
                 }
 
                 return collect($range)->map(function ($date) use ($component) {
-                    $date = $component->parseToCarbon($date)
-                        ->setTimezone($component->getTimezone());
+                    $parsed = $component->parseToCarbon($date);
 
-                    if (! $component->isNative()) {
-                        return $date->format($component->getFormat());
+                    if (!$parsed) {
+                        return null;
                     }
 
-                    if (! $component->hasTime()) {
-                        return $date->toDateString();
+                    $parsed = $parsed->setTimezone($component->getTimezone());
+
+                    if (!$component->isNative()) {
+                        return $parsed->format($component->getFormat());
+                    }
+
+                    if (!$component->hasTime()) {
+                        return $parsed->toDateString();
                     }
 
                     $precision = $component->hasSeconds() ? 'second' : 'minute';
 
-                    if (! $component->hasDate()) {
-                        return $date->toTimeString($precision);
+                    if (!$component->hasDate()) {
+                        return $parsed->toTimeString($precision);
                     }
 
-                    return $date->toDateTimeString();
-                })->toArray();
+                    return $parsed->toDateTimeString();
+                })->filter()->values()->toArray();
             } else {
                 return $state;
             }
@@ -586,6 +590,41 @@ class Flatpickr extends Field
         return $state;
     }
 
+    protected static function splitRangeString(string $state, Flatpickr $component): array
+    {
+        $state = trim($state);
+
+        $matches = self::extractDateMatches($state, $component);
+        if (count($matches) >= 2) {
+            return [$matches[0], $matches[1]];
+        }
+
+        $len = strlen($state);
+        for ($i = 1; $i < $len; $i++) {
+            $firstPart = trim(substr($state, 0, $i));
+            $secondPart = trim(substr($state, $i));
+
+            if ($component->parseToCarbon($firstPart) && $component->parseToCarbon($secondPart)) {
+                return [$firstPart, $secondPart];
+            }
+        }
+
+        return [$state];
+    }
+
+    protected static function extractDateMatches(string $state, Flatpickr $component): array
+    {
+        $format = $component->getFormat();
+        $pattern = preg_quote($format, '/');
+        $pattern = str_replace(['d', 'm', 'Y', 'y'], ['\\d{1,2}', '\\d{1,2}', '\\d{4}', '\\d{2}'], $pattern);
+        $pattern = '/' . $pattern . '/';
+
+        if (preg_match_all($pattern, $state, $matches)) {
+            return $matches[0];
+        }
+
+        return [];
+    }
     protected function setUp(): void
     {
         parent::setUp();
