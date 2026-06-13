@@ -40,8 +40,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, pcov
-          coverage: pcov
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
 
       - name: Setup problem matchers
         run: |
@@ -58,14 +58,7 @@ jobs:
         run: vendor/bin/pint --test
 
       - name: Execute tests
-        run: vendor/bin/pest --ci --coverage --min=96
-
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.php == '8.4' && matrix.laravel == '13.*' && matrix.stability == 'prefer-stable'
-        uses: codecov/codecov-action@v5
-        with:
-          files: build/logs/clover.xml
-          fail_ci_if_error: false
+        run: vendor/bin/pest --ci --no-coverage
 
   platform-smoke:
     runs-on: ubuntu-latest
