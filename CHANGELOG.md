@@ -2,6 +2,19 @@
 
 All notable changes to `flatpickr` will be documented in this file.
 
+## v5.3.0 - 2026-06-14
+
+### What's Changed
+
+* Fix form render crash and invalid Flatpickr locale by @coolsam726 in https://github.com/coolsam726/flatpickr/pull/152
+* Add split range picker via rangeEnd() (RFC 0001) by @coolsam726 in https://github.com/coolsam726/flatpickr/pull/153
+
+### New Contributors
+
+* @github-actions[bot] made their first contribution in https://github.com/coolsam726/flatpickr/pull/151
+
+**Full Changelog**: https://github.com/coolsam726/flatpickr/compare/v5.2.0...v5.3.0
+
 ## v5.2.0 - 2026-06-13
 
 ### What's Changed
