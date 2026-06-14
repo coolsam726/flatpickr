@@ -72,6 +72,39 @@ function parseConstraintValue(value) {
   return value
 }
 
+function isRangeMode(attrs) {
+  return attrs.mode === 'range' || attrs.rangePicker === true
+}
+
+function sortSelectedDates(selectedDates) {
+  return [...selectedDates].sort((first, second) => first.getTime() - second.getTime())
+}
+
+function formatSelectedDates(fp, selectedDates, attrs) {
+  if (!selectedDates?.length || !fp) {
+    return null
+  }
+
+  const dates =
+    isRangeMode(attrs) && selectedDates.length >= 2
+      ? sortSelectedDates(selectedDates)
+      : selectedDates
+
+  const format = fp.config.dateFormat ?? attrs.dateFormat ?? 'Y-m-d'
+  const separator = isRangeMode(attrs)
+    ? (fp.l10n?.rangeSeparator ?? attrs.rangeSeparator ?? ' to ')
+    : (attrs.conjunction ?? ', ')
+
+  return dates.map((date) => fp.formatDate(date, format)).join(separator)
+}
+
+function setRangeDatesOnPicker(fp, dates, triggerChange = false) {
+  fp.selectedDates = dates.filter(Boolean)
+  fp.latestSelectedDateObj = fp.selectedDates[fp.selectedDates.length - 1] ?? undefined
+  fp.redraw()
+  fp.updateValue(triggerChange)
+}
+
 export default function flatpickrComponent(state, attrs) {
   const timezone = dayjs.tz.guess()
 
@@ -82,11 +115,16 @@ export default function flatpickrComponent(state, attrs) {
 
     fp: null,
     visibilityObserver: null,
+    isPickerUpdate: false,
 
     init: function () {
       this.initWhenVisible()
 
       this.$watch('state', (value) => {
+        if (this.isPickerUpdate) {
+          return
+        }
+
         this.syncPickerFromState(value)
       })
 
@@ -130,6 +168,24 @@ export default function flatpickrComponent(state, attrs) {
       })
 
       this.visibilityObserver.observe(this.$el)
+    },
+
+    setPickerState: function (selectedDates) {
+      if (isRangeMode(this.attrs) && selectedDates.length >= 2) {
+        selectedDates = sortSelectedDates(selectedDates)
+
+        if (this.fp) {
+          setRangeDatesOnPicker(this.fp, selectedDates)
+        }
+      }
+
+      this.isPickerUpdate = true
+      this.state =
+        selectedDates.length === 0 ? null : formatSelectedDates(this.fp, selectedDates, this.attrs)
+
+      this.$nextTick(() => {
+        this.isPickerUpdate = false
+      })
     },
 
     initFlatpickr: function () {
@@ -186,10 +242,16 @@ export default function flatpickrComponent(state, attrs) {
             return
           }
 
-          this.state = selectedDates.length === 0 ? null : dateStr
+          if (selectedDates.length === 0) {
+            this.setPickerState([])
+
+            return
+          }
+
+          this.setPickerState(selectedDates)
         },
         onClose: () => {
-          this.commitManualInput()
+          this.syncStateFromPicker()
         },
       }
 
@@ -219,8 +281,28 @@ export default function flatpickrComponent(state, attrs) {
       })
     },
 
+    syncStateFromPicker: function () {
+      if (!this.fp) {
+        return
+      }
+
+      if (isRangeMode(this.attrs)) {
+        this.setPickerState(this.fp.selectedDates)
+
+        return
+      }
+
+      this.commitManualInput()
+    },
+
     commitManualInput: function () {
       if (!this.fp) {
+        return
+      }
+
+      if (isRangeMode(this.attrs)) {
+        this.setPickerState(this.fp.selectedDates)
+
         return
       }
 
@@ -265,6 +347,42 @@ export default function flatpickrComponent(state, attrs) {
         this.fp.clear()
 
         return
+      }
+
+      if (isRangeMode(this.attrs) && this.attrs.enableTime && typeof normalized === 'string') {
+        const separator = this.fp.l10n?.rangeSeparator ?? this.attrs.rangeSeparator ?? ' to '
+
+        if (normalized.includes(separator)) {
+          const parts = normalized.split(separator).map((part) => part.trim())
+
+          if (parts.length === 2) {
+            const format = this.fp.config.dateFormat
+            const dates = parts
+              .map((part) => this.fp.parseDate(part, format))
+              .filter(Boolean)
+
+            if (dates.length === 2) {
+              const sortedDates = sortSelectedDates(dates)
+
+              setRangeDatesOnPicker(this.fp, sortedDates)
+
+              const sortedState = formatSelectedDates(this.fp, sortedDates, this.attrs)
+
+              if (sortedState !== normalized) {
+                this.isPickerUpdate = true
+                this.state = sortedState
+
+                this.$nextTick(() => {
+                  this.isPickerUpdate = false
+                })
+
+                return
+              }
+
+              return
+            }
+          }
+        }
       }
 
       this.fp.setDate(normalized, false)

@@ -64,7 +64,7 @@ One component covers every Flatpickr mode you need:
 |------|--------|----------------|
 | Date | `Flatpickr::make('date')` | `Y-m-d` |
 | Date & time | `->time(true)` or `->timePicker()` | `Y-m-d H:i` / `H:i` |
-| Range | `->rangePicker()` | array of date strings |
+| Range | `->rangePicker()` | array of date strings, or two fields with `->rangeEnd()` |
 | Multiple dates | `->multiplePicker()` | array of date strings |
 | Week | `->weekPicker()` | `W Y` |
 | Month | `->monthPicker()` | `Y-m` |
@@ -80,6 +80,7 @@ Flatpickr::make('week_number')->weekPicker()->format('W Y');
 Flatpickr::make('month')->monthPicker()->format('Y-m')->displayFormat('F Y');
 Flatpickr::make('year')->yearPicker();
 Flatpickr::make('range')->rangePicker();
+Flatpickr::make('starts_at')->rangePicker()->rangeEnd('ends_at')->format('Y-m-d');
 Flatpickr::make('occupied_slots')->multiplePicker()->format('Y-m-d')->displayFormat('F j, Y');
 ```
 
@@ -130,6 +131,40 @@ See the [Flatpickr documentation](https://flatpickr.js.org/options/) for details
 |--------|------------------|
 | Date, time, week, month, year | `string` or `CarbonInterface` |
 | Range, multiple | `array` of date strings or `CarbonInterface` instances |
+| Range with `->rangeEnd('ends_at')` | Two separate fields: start and end strings or `CarbonInterface` instances |
+
+### Split range across two fields
+
+When your model uses separate `starts_at` and `ends_at` columns, bind the range picker to the start field and name the end field explicitly. One picker is shown; both attributes are hydrated, synced live, and dehydrated on save.
+
+```php
+Flatpickr::make('starts_at')
+    ->label('Event dates')
+    ->rangePicker()
+    ->rangeEnd('ends_at')
+    ->format('Y-m-d');
+```
+
+Do not add a second Flatpickr on `ends_at`. Validation rules on `ends_at` (for example `after:starts_at`) still work because the end value is kept in sync while the user selects a range.
+
+#### Date & time range
+
+Use `->time(true)` with a format that includes hours and minutes. `displayFormat()` controls what the user sees in the input (Flatpickr tokens, not PHP `date()` tokens). Storage and dehydration still use `format()`.
+
+```php
+Flatpickr::make('starts_at')
+    ->label('Event schedule')
+    ->rangePicker()
+    ->rangeEnd('ends_at')
+    ->time(true)
+    ->format('Y-m-d H:i')              // saved to starts_at / ends_at
+    ->displayFormat('M j, Y h:i K')    // e.g. Jun 14, 2024 7:00 AM to Jun 17, 2024 5:00 PM
+    ->rangeSeparator(' to ');
+```
+
+Ensure your model casts both columns as `datetime`. The picker UI lets you choose a date and time for each end of the range in one calendar.
+
+See [RFC 0001](rfcs/0001-split-range-end-field.md) for the full design.
 
 ## Themes
 

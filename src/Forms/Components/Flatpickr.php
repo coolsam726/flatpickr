@@ -11,9 +11,12 @@ use Coolsam\Flatpickr\Enums\FlatpickrPosition;
 use Coolsam\Flatpickr\Enums\FlatpickrTheme;
 use Coolsam\Flatpickr\FilamentFlatpickr;
 use Filament\Forms\Components\Field;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Illuminate\View\ComponentAttributeBag;
 
 class Flatpickr extends Field
@@ -140,6 +143,8 @@ class Flatpickr extends Field
 
     protected bool | Closure $rangePicker = false;
 
+    protected string | Closure | null $rangeEndField = null;
+
     protected bool | Closure $multiplePicker = false;
 
     protected bool | Closure $timePicker = false;
@@ -255,6 +260,185 @@ class Flatpickr extends Field
     public function getRangeSeparator(): string
     {
         return $this->evaluate($this->rangeSeparator);
+    }
+
+    public function rangeEnd(string | Closure | null $field): static
+    {
+        $this->rangeEndField = $field;
+
+        return $this;
+    }
+
+    public function getRangeEndField(): ?string
+    {
+        return $this->evaluate($this->rangeEndField);
+    }
+
+    public function hasRangeEndField(): bool
+    {
+        return filled($this->getRangeEndField());
+    }
+
+    public function getRangeEndStatePath(): string
+    {
+        $endField = (string) $this->getRangeEndField();
+
+        if (isset($this->container)) {
+            return $this->resolveRelativeStatePath($endField);
+        }
+
+        if (! filled($this->statePath)) {
+            return $endField;
+        }
+
+        if (str_contains($this->statePath, '.')) {
+            return Str::beforeLast($this->statePath, '.') . '.' . $endField;
+        }
+
+        return $endField;
+    }
+
+    protected function getDehydrationStatePath(): string
+    {
+        if (isset($this->container)) {
+            return $this->getStatePath();
+        }
+
+        return $this->statePath ?? '';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getStateToDehydrate(mixed $state): array
+    {
+        if (! ($this->hasRangeEndField() && $this->isRangePicker())) {
+            return parent::getStateToDehydrate($state);
+        }
+
+        if ($state === '') {
+            $state = null;
+        }
+
+        foreach ($this->getStateCasts() as $stateCast) {
+            $state = $stateCast->get($state);
+        }
+
+        $dehydrated = static::dehydrateFlatpickr($this, $state);
+
+        if (! is_array($dehydrated)) {
+            return [
+                $this->getDehydrationStatePath() => $dehydrated,
+                $this->getRangeEndStatePath() => null,
+            ];
+        }
+
+        [$start, $end] = array_pad($dehydrated, 2, null);
+
+        return [
+            $this->getDehydrationStatePath() => $start,
+            $this->getRangeEndStatePath() => $end,
+        ];
+    }
+
+    /**
+     * @param  array<int, mixed>  $dates
+     * @return array<int, mixed>
+     */
+    protected static function sortRangeDates(array $dates, Flatpickr $component): array
+    {
+        if (count($dates) < 2) {
+            return $dates;
+        }
+
+        $sortable = collect($dates)->map(function (mixed $date) use ($component): ?array {
+            $parsed = $component->parseToCarbon($date);
+
+            if (! $parsed) {
+                return null;
+            }
+
+            return [
+                'timestamp' => $parsed->getTimestamp(),
+                'value' => $date,
+            ];
+        })->filter()->values();
+
+        if ($sortable->count() < 2) {
+            return $dates;
+        }
+
+        return $sortable->sortBy('timestamp')->pluck('value')->all();
+    }
+
+    protected function normalizeSortedRangeState(mixed $state): mixed
+    {
+        if (! $this->isRangePicker() || blank($state)) {
+            return $state;
+        }
+
+        if (is_array($state)) {
+            $sorted = static::sortRangeDates($state, $this);
+
+            return $sorted === $state ? $state : $sorted;
+        }
+
+        if (! is_string($state)) {
+            return $state;
+        }
+
+        $parts = static::splitRangeString($state, $this, allowBruteForce: false);
+
+        if (count($parts) < 2 || blank($parts[1])) {
+            return $state;
+        }
+
+        $sorted = static::sortRangeDates($parts, $this);
+        $normalized = implode($this->getRangeSeparator(), $sorted);
+
+        return $normalized === $state ? $state : $normalized;
+    }
+
+    protected function resolveRangeEndStateValue(mixed $state): ?string
+    {
+        if (blank($state)) {
+            return null;
+        }
+
+        $dates = is_array($state)
+            ? $state
+            : static::splitRangeString((string) $state, $this, allowBruteForce: false);
+
+        if (count($dates) < 2 || blank($dates[1])) {
+            return null;
+        }
+
+        $dates = static::sortRangeDates($dates, $this);
+
+        $end = $this->parseToCarbon($dates[1]);
+
+        if (! $end) {
+            return null;
+        }
+
+        return $end->format($this->getFormat());
+    }
+
+    protected function syncRangeEndField(mixed $state, Set $set): void
+    {
+        if (blank($state)) {
+            $set($this->getRangeEndField(), null);
+
+            return;
+        }
+
+        $endValue = $this->resolveRangeEndStateValue($state);
+
+        if ($endValue === null) {
+            return;
+        }
+
+        $set($this->getRangeEndField(), $endValue);
     }
 
     // Methods needed by the view
@@ -609,7 +793,12 @@ class Flatpickr extends Field
                 }
 
                 return $parsed->toDateTimeString();
-            })->filter()->values()->toArray();
+            })->filter()->values()->when(
+                $component->isRangePicker(),
+                fn (Collection $dates) => $dates->count() >= 2
+                    ? collect(static::sortRangeDates($dates->all(), $component))
+                    : $dates,
+            )->toArray();
         }
 
         if ($component->isTimePicker() || ($component->hasTime() && ! $component->hasDate())) {
@@ -621,7 +810,7 @@ class Flatpickr extends Field
         return $state;
     }
 
-    protected static function splitRangeString(string $state, Flatpickr $component): array
+    protected static function splitRangeString(string $state, Flatpickr $component, bool $allowBruteForce = true): array
     {
         $state = trim($state);
 
@@ -640,6 +829,10 @@ class Flatpickr extends Field
             return [$matches[0], $matches[1]];
         }
 
+        if (! $allowBruteForce) {
+            return [$state];
+        }
+
         $len = strlen($state);
         for ($i = 1; $i < $len; $i++) {
             $firstPart = trim(substr($state, 0, $i));
@@ -655,10 +848,7 @@ class Flatpickr extends Field
 
     protected static function extractDateMatches(string $state, Flatpickr $component): array
     {
-        $format = $component->getFormat();
-        $pattern = preg_quote($format, '/');
-        $pattern = str_replace(['d', 'm', 'Y', 'y'], ['\\d{1,2}', '\\d{1,2}', '\\d{4}', '\\d{2}'], $pattern);
-        $pattern = '/' . $pattern . '/';
+        $pattern = self::formatToRegexPattern($component->getFormat());
 
         if (preg_match_all($pattern, $state, $matches)) {
             return $matches[0];
@@ -667,14 +857,69 @@ class Flatpickr extends Field
         return [];
     }
 
+    protected static function formatToRegexPattern(string $format): string
+    {
+        $regex = '';
+
+        for ($i = 0; $i < strlen($format); $i++) {
+            $regex .= match ($format[$i]) {
+                'Y' => '\\d{4}',
+                'y' => '\\d{2}',
+                'm', 'n' => '\\d{1,2}',
+                'd', 'j' => '\\d{1,2}',
+                'H' => '\\d{1,2}',
+                'h', 'g' => '\\d{1,2}',
+                'i' => '\\d{2}',
+                's', 'S' => '\\d{2}',
+                default => preg_quote($format[$i], '/'),
+            };
+        }
+
+        return '/' . $regex . '/';
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->afterStateHydrated(fn (Flatpickr $component, $state) => $component->hydrateFlatpickr(
-            $component,
-            $state
-        ));
+        $this->afterStateHydrated(function (Flatpickr $component, $state, Get $get): void {
+            if ($component->hasRangeEndField() && $component->isRangePicker()) {
+                $endState = $get($component->getRangeEndField());
+
+                if (
+                    is_string($state)
+                    && filled($component->getRangeSeparator())
+                    && str($state)->contains($component->getRangeSeparator())
+                ) {
+                    $component->state($component->normalizeSortedRangeState($state));
+
+                    return;
+                }
+
+                if (filled($state) && filled($endState)) {
+                    $component->hydrateFlatpickr($component, static::sortRangeDates([$state, $endState], $component));
+
+                    return;
+                }
+            }
+
+            $component->hydrateFlatpickr($component, $state);
+        });
+
+        $this->afterStateUpdated(function (Flatpickr $component, $state, Set $set): void {
+            if ($component->isRangePicker()) {
+                $normalized = $component->normalizeSortedRangeState($state);
+
+                if ($normalized !== $state && filled($normalized)) {
+                    $component->state($normalized);
+                    $state = $normalized;
+                }
+
+                if ($component->hasRangeEndField()) {
+                    $component->syncRangeEndField($state, $set);
+                }
+            }
+        });
 
         $this->dehydrateStateUsing(fn (Flatpickr $component, $state) => $component::dehydrateFlatpickr(
             $component,
