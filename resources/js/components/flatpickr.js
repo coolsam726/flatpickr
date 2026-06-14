@@ -76,20 +76,29 @@ function isRangeMode(attrs) {
   return attrs.mode === 'range' || attrs.rangePicker === true
 }
 
+function sortSelectedDates(selectedDates) {
+  return [...selectedDates].sort((first, second) => first.getTime() - second.getTime())
+}
+
 function formatSelectedDates(fp, selectedDates, attrs) {
   if (!selectedDates?.length || !fp) {
     return null
   }
+
+  const dates =
+    isRangeMode(attrs) && selectedDates.length >= 2
+      ? sortSelectedDates(selectedDates)
+      : selectedDates
 
   const format = fp.config.dateFormat ?? attrs.dateFormat ?? 'Y-m-d'
   const separator = isRangeMode(attrs)
     ? (fp.l10n?.rangeSeparator ?? attrs.rangeSeparator ?? ' to ')
     : (attrs.conjunction ?? ', ')
 
-  return selectedDates.map((date) => fp.formatDate(date, format)).join(separator)
+  return dates.map((date) => fp.formatDate(date, format)).join(separator)
 }
 
-function setRangeDatesPreservingOrder(fp, dates, triggerChange = false) {
+function setRangeDatesOnPicker(fp, dates, triggerChange = false) {
   fp.selectedDates = dates.filter(Boolean)
   fp.latestSelectedDateObj = fp.selectedDates[fp.selectedDates.length - 1] ?? undefined
   fp.redraw()
@@ -162,6 +171,14 @@ export default function flatpickrComponent(state, attrs) {
     },
 
     setPickerState: function (selectedDates) {
+      if (isRangeMode(this.attrs) && selectedDates.length >= 2) {
+        selectedDates = sortSelectedDates(selectedDates)
+
+        if (this.fp) {
+          setRangeDatesOnPicker(this.fp, selectedDates)
+        }
+      }
+
       this.isPickerUpdate = true
       this.state =
         selectedDates.length === 0 ? null : formatSelectedDates(this.fp, selectedDates, this.attrs)
@@ -345,7 +362,22 @@ export default function flatpickrComponent(state, attrs) {
               .filter(Boolean)
 
             if (dates.length === 2) {
-              setRangeDatesPreservingOrder(this.fp, dates)
+              const sortedDates = sortSelectedDates(dates)
+
+              setRangeDatesOnPicker(this.fp, sortedDates)
+
+              const sortedState = formatSelectedDates(this.fp, sortedDates, this.attrs)
+
+              if (sortedState !== normalized) {
+                this.isPickerUpdate = true
+                this.state = sortedState
+
+                this.$nextTick(() => {
+                  this.isPickerUpdate = false
+                })
+
+                return
+              }
 
               return
             }

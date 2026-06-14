@@ -341,6 +341,64 @@ class Flatpickr extends Field
         ];
     }
 
+    /**
+     * @param  array<int, mixed>  $dates
+     * @return array<int, mixed>
+     */
+    protected static function sortRangeDates(array $dates, Flatpickr $component): array
+    {
+        if (count($dates) < 2) {
+            return $dates;
+        }
+
+        $sortable = collect($dates)->map(function (mixed $date) use ($component): ?array {
+            $parsed = $component->parseToCarbon($date);
+
+            if (! $parsed) {
+                return null;
+            }
+
+            return [
+                'timestamp' => $parsed->getTimestamp(),
+                'value' => $date,
+            ];
+        })->filter()->values();
+
+        if ($sortable->count() < 2) {
+            return $dates;
+        }
+
+        return $sortable->sortBy('timestamp')->pluck('value')->all();
+    }
+
+    protected function normalizeSortedRangeState(mixed $state): mixed
+    {
+        if (! $this->isRangePicker() || blank($state)) {
+            return $state;
+        }
+
+        if (is_array($state)) {
+            $sorted = static::sortRangeDates($state, $this);
+
+            return $sorted === $state ? $state : $sorted;
+        }
+
+        if (! is_string($state)) {
+            return $state;
+        }
+
+        $parts = static::splitRangeString($state, $this, allowBruteForce: false);
+
+        if (count($parts) < 2 || blank($parts[1])) {
+            return $state;
+        }
+
+        $sorted = static::sortRangeDates($parts, $this);
+        $normalized = implode($this->getRangeSeparator(), $sorted);
+
+        return $normalized === $state ? $state : $normalized;
+    }
+
     protected function resolveRangeEndStateValue(mixed $state): ?string
     {
         if (blank($state)) {
@@ -354,6 +412,8 @@ class Flatpickr extends Field
         if (count($dates) < 2 || blank($dates[1])) {
             return null;
         }
+
+        $dates = static::sortRangeDates($dates, $this);
 
         $end = $this->parseToCarbon($dates[1]);
 
@@ -733,7 +793,12 @@ class Flatpickr extends Field
                 }
 
                 return $parsed->toDateTimeString();
-            })->filter()->values()->toArray();
+            })->filter()->values()->when(
+                $component->isRangePicker(),
+                fn (Collection $dates) => $dates->count() >= 2
+                    ? collect(static::sortRangeDates($dates->all(), $component))
+                    : $dates,
+            )->toArray();
         }
 
         if ($component->isTimePicker() || ($component->hasTime() && ! $component->hasDate())) {
@@ -826,13 +891,13 @@ class Flatpickr extends Field
                     && filled($component->getRangeSeparator())
                     && str($state)->contains($component->getRangeSeparator())
                 ) {
-                    $component->hydrateFlatpickr($component, $state);
+                    $component->state($component->normalizeSortedRangeState($state));
 
                     return;
                 }
 
                 if (filled($state) && filled($endState)) {
-                    $component->hydrateFlatpickr($component, [$state, $endState]);
+                    $component->hydrateFlatpickr($component, static::sortRangeDates([$state, $endState], $component));
 
                     return;
                 }
@@ -842,8 +907,17 @@ class Flatpickr extends Field
         });
 
         $this->afterStateUpdated(function (Flatpickr $component, $state, Set $set): void {
-            if ($component->hasRangeEndField() && $component->isRangePicker()) {
-                $component->syncRangeEndField($state, $set);
+            if ($component->isRangePicker()) {
+                $normalized = $component->normalizeSortedRangeState($state);
+
+                if ($normalized !== $state && filled($normalized)) {
+                    $component->state($normalized);
+                    $state = $normalized;
+                }
+
+                if ($component->hasRangeEndField()) {
+                    $component->syncRangeEndField($state, $set);
+                }
             }
         });
 
