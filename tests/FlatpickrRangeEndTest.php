@@ -154,3 +154,17 @@ it('dehydrates datetime ends without dropping the time component', function () {
         ->and($dehydrated['ends_at'])->toBe('2024-06-17 17:00')
         ->and($dehydrated['ends_at'])->not->toBe('2024-06-17 00:00');
 });
+
+it('preserves range order when the end datetime is before the start on the same day', function () {
+    $component = Flatpickr::make('starts_at')
+        ->rangePicker()
+        ->rangeEnd('ends_at')
+        ->time(true)
+        ->format('Y-m-d H:i')
+        ->rangeSeparator(' to ');
+
+    $dehydrated = $component->getStateToDehydrate('2024-06-14 15:00 to 2024-06-14 14:00');
+
+    expect($dehydrated['starts_at'])->toBe('2024-06-14 15:00')
+        ->and($dehydrated['ends_at'])->toBe('2024-06-14 14:00');
+});
