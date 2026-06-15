@@ -25,7 +25,7 @@ jobs:
           release-notes: ${{ github.event.release.body }}
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Update CHANGELOG
           title: Update CHANGELOG for ${{ github.event.release.name }}
