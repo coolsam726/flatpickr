@@ -319,7 +319,8 @@ export default function flatpickrComponent(state, attrs) {
         return
       }
 
-      const parsed = this.fp.parseDate(inputValue, this.fp.config.dateFormat)
+      const inputFormat = this.fp.altInput ? this.fp.config.altFormat : this.fp.config.dateFormat
+      const parsed = this.fp.parseDate(inputValue, inputFormat)
 
       if (!parsed) {
         return
