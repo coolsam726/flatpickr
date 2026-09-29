@@ -142,3 +142,15 @@ it('accepts valid range picker values', function () {
 
     expect($validator->passes())->toBeTrue();
 });
+
+it('validates a time-only picker against its format instead of the date rule', function () {
+    $component = Flatpickr::make('start_time')->timePicker()->format('H:i');
+
+    $rules = $component->getValidationRules();
+
+    expect($rules)->not->toContain('date')
+        ->and($rules)->toContain('date_format:H:i');
+
+    expect(Validator::make(['start_time' => '14:00'], ['start_time' => $rules])->passes())->toBeTrue()
+        ->and(Validator::make(['start_time' => '14:60'], ['start_time' => $rules])->fails())->toBeTrue();
+});

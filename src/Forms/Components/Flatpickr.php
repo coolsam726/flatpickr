@@ -646,7 +646,11 @@ class Flatpickr extends Field
             if ($state instanceof CarbonInterface) {
                 return $state->setTimezone($component->getTimezone());
             }
-            $state = Carbon::createFromFormat($component->getFormat(), (string) $state, config('app.timezone'));
+            // «!» resets every field the format does not mention: a date-only
+            // «Y-m-d» lands on midnight instead of the current clock time, a
+            // time-only «H:i» on the epoch date — so a date saved through a
+            // date-only picker is the same date on every save.
+            $state = Carbon::createFromFormat('!' . ltrim($component->getFormat(), '!'), (string) $state, config('app.timezone'));
 
             return $state->setTimezone($component->getTimezone());
         } catch (InvalidFormatException $exception) {
@@ -926,9 +930,15 @@ class Flatpickr extends Field
             $state
         ));
 
+        // Laravel's «date» rule refuses a bare time («14:00»): time-only
+        // pickers validate against their own format instead.
         $this->rule(
             'date',
-            fn (Flatpickr $component): bool => ! $component->isRangePicker() && ! $component->isMultiplePicker() && $component->hasDate(),
+            fn (Flatpickr $component): bool => ! $component->isRangePicker() && ! $component->isMultiplePicker() && $component->hasDate() && ! $component->isTimePicker(),
+        );
+        $this->rule(
+            fn (Flatpickr $component): string => 'date_format:' . ltrim($component->getFormat(), '!'),
+            fn (Flatpickr $component): bool => ! $component->isRangePicker() && ! $component->isMultiplePicker() && $component->isTimePicker(),
         );
 
         $this->rule(static function (Flatpickr $component): ?Closure {
