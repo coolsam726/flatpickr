@@ -168,3 +168,19 @@ it('parses carbon instances for time-only dehydration output', function () {
 
     expect($result)->toBe('14:45');
 });
+
+it('dehydrates a date-only value to midnight, not to the current clock time', function () {
+    $component = Flatpickr::make('day')->format('Y-m-d');
+
+    $result = Flatpickr::dehydrateFlatpickr($component, '2024-06-15');
+
+    expect($result->format('Y-m-d H:i:s'))->toBe('2024-06-15 00:00:00');
+});
+
+it('dehydrates a time-only value with its format', function () {
+    $component = Flatpickr::make('start_time')->timePicker()->format('H:i');
+
+    $result = Flatpickr::dehydrateFlatpickr($component, '09:30');
+
+    expect($result instanceof CarbonInterface ? $result->format('H:i') : $result)->toBe('09:30');
+});
