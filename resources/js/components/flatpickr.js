@@ -273,9 +273,36 @@ export default function flatpickrComponent(state, attrs) {
       }
 
       const inputs = [this.fp.altInput, this.fp.input].filter(Boolean)
+      const calendar = this.fp.calendarContainer
+
+      // A click into the calendar blurs the text box first. Committing the
+      // typed text at that moment redraws the calendar between mousedown and
+      // mouseup, so the click lands on a replaced element and nothing is
+      // selected — every day had to be clicked twice. While the pointer is
+      // down inside the calendar the blur is left alone; the selection (or
+      // onClose) commits the value.
+      let pointerInCalendar = false
+
+      calendar?.addEventListener(
+        'mousedown',
+        () => {
+          pointerInCalendar = true
+
+          document.addEventListener(
+            'mouseup',
+            () => setTimeout(() => (pointerInCalendar = false)),
+            { once: true, capture: true },
+          )
+        },
+        true,
+      )
 
       inputs.forEach((input) => {
-        input.addEventListener('blur', () => {
+        input.addEventListener('blur', (event) => {
+          if (pointerInCalendar || (event.relatedTarget && calendar?.contains(event.relatedTarget))) {
+            return
+          }
+
           this.commitManualInput()
         })
       })
